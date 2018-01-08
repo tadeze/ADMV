@@ -4,7 +4,7 @@ import argparse
 import os
 from util.common import *
 from algorithm.loda_miss import *
-from algorithm.iformiss import *
+from algorithm.ifor_miss import *
 
 
 class ADDetector:
