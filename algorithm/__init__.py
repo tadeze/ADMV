@@ -1,3 +1,3 @@
-from .ifor_miss import *
-from .loda_miss import *
-from .pyloda import *
+from .ifor_miss import BaggedIForest
+#from .loda_miss import *
+from .loda.loda import Loda

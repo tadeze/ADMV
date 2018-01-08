@@ -88,6 +88,7 @@ class BaggedIForest(pft.IForest):
                                   max_height=max_height, adaptive=adaptive,rangecheck=rangecheck)
         self.trees_proj = None
         self.num_tree_used = []
+        self.check_miss = False
     def train(self, train_df):
         assert isinstance(train_df, np.ndarray)
         nrow, ncol = train_df.shape
@@ -105,10 +106,12 @@ class BaggedIForest(pft.IForest):
             itree.iTree(sample_index, train_df[:,cols], 0, self.maxheight)
             self.trees.append({"tree": itree, "cols":cols})
             self.trees_proj[tree,cols] = 1
+
             #logger.info("tree %d, %s"%(tree,cols))
-     #def score(self, test_df):
-        #self.num_tree_used = np.zeros([test_df.shape[0],1])
-     #   return super(BaggedIForest, self).score(test_df)
+    def score(self, test_df, check_miss=True):
+        self.num_tree_used = []# np.zeros([test_df.shape[0],1])
+        self.check_miss = check_miss
+        return super(BaggedIForest, self).score(test_df)
 
     def get_trees(self, miss_features):
         # Get trees without missing features.
@@ -117,7 +120,10 @@ class BaggedIForest(pft.IForest):
         return used_trees
 
     def get_miss_features(self, test_df):
-        miss_column = np.where(test_df == NA)[0]
+        if np.isnan(NA):
+            miss_column = np.where(np.isnan(test_df))[0]
+        else:
+            miss_column = np.where(test_df == NA)[0]
         return miss_column
 
     def depth(self, test_df, oob=False):
@@ -127,7 +133,10 @@ class BaggedIForest(pft.IForest):
         :return:list list of depth from trees.
         """
         all_depth = []
-        miss_column = self.get_miss_features(test_df)
+        if self.check_miss:
+            miss_column = self.get_miss_features(test_df)
+        else:
+            miss_column = []
         for tree_inst in self.trees:
             tree = tree_inst["tree"]
             used_cols = tree_inst["cols"]
@@ -141,16 +150,26 @@ class BaggedIForest(pft.IForest):
         return all_depth
 
 if __name__ == '__main__':
-    ff = BaggedIForest(ntree=1000)
+    ff = BaggedIForest(ntree=100)
     w = np.random.randn(50,10)
     test = w.copy()
     ff.train(w)
-    test[1:5,[2,3,5,6,8]] = NA
+    test[1:5,[2,3,5]] = NA
     test[8,4] = NA
     print ff.nsample
-    print ff.depth(w[1,:])
-    print ff.score(test)
-    print ff.num_tree_used
+    #print ff.depth(w[1,:])
+    print test[0:7,:]
+    print ff.score(test,check_miss=True)[1:10], ff.num_tree_used
+    print ff.score(test, check_miss=False)[1:10], ff.num_tree_used
+    # impute
+    import fancyimpute as fi
+    test_imp = fi.KNN(k=3).complete(test)
+    print ff.score(test_imp, check_miss=True)[1:10], ff.num_tree_used
+    import loda.loda as ld
+    ldd = ld.Loda()
+    ldd.train(w)
+    print ldd.score(test)
+    #print ff.num_tree_used
 #  Full forest
     #fx = BaggedIForest(ntree=10)
     #super(BaggedIForest, fx).train(w)
