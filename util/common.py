@@ -3,9 +3,9 @@ import sklearn.metrics as mt
 
 
 ## MISSING VALUE FLAGES
-MISSING_VALUE = np.nan #-9999.0
+MISSING_VALUE = -9999.0
 missing_value_per = 0.1
-
+NA = np.nan
 
 def rbind(r1, r2):
     if r1 is None:

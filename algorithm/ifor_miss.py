@@ -81,6 +81,7 @@ import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 NA = np.nan #-9999.0
+
 class BaggedIForest(pft.IForest):
     def __init__(self, ntree=100, nsample=512,
                  max_height=0, adaptive=False, rangecheck=True):
@@ -119,11 +120,15 @@ class BaggedIForest(pft.IForest):
         used_trees = np.where(self.trees_proj.any(axis=1) != NA)
         return used_trees
 
-    def get_miss_features(self, test_df):
+    def get_miss_features(self, row):
+        """
+        :param row: np.ndarray of 1Xd vector.
+        :return:
+        """
         if np.isnan(NA):
-            miss_column = np.where(np.isnan(test_df))[0]
+            miss_column = np.where(np.isnan(row))[0]
         else:
-            miss_column = np.where(test_df == NA)[0]
+            miss_column = np.where(row == NA)[0]
         return miss_column
 
     def depth(self, test_df, oob=False):
@@ -168,7 +173,7 @@ if __name__ == '__main__':
     import loda.loda as ld
     ldd = ld.Loda()
     ldd.train(w)
-    print ldd.score(test)
+    print ldd.score(test, True)
     #print ff.num_tree_used
 #  Full forest
     #fx = BaggedIForest(ntree=10)

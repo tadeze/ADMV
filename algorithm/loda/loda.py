@@ -1,7 +1,7 @@
 
 from common import *
-NA = -9999.0
-
+#NA = -9999.0
+NA = np.nan
 class ProjectionVectorsHistograms(object):
     def __init__(self, w=None, hists=None):
         """
@@ -142,13 +142,20 @@ class Loda(object):
         ll = -np.sum(pds_log, axis=1) / non_zero_proj  # -np.mean(pds, axis=1)  # neg. log-lik
         return ll
 
+    def get_miss_features(self, test_df):
+        if np.isnan(NA):
+            miss_column = np.where(np.isnan(test_df))[0]
+        else:
+            miss_column = np.where(test_df == NA)[0]
+        return miss_column
     def get_all_hist_pdfs_miss(self, a, w, hists):
 
         # x = a.dot(w)
         hpdfs = np.zeros(shape=(len(a), len(hists)), dtype=float)
 
         for i in range(0, a.shape[0]):
-            miss_column = np.where(a[i, :] == NA)[0]
+            miss_column = self.get_miss_features(a[i,:])
+            #miss_column = np.where(a[i, :] == NA)[0]
             # search w with this projections
             if len(miss_column) > 0:
                 w_miss = w[miss_column, :]
@@ -261,5 +268,6 @@ class Loda(object):
         nll = self.get_neg_ll_all_hist(test_x, self.pvh.pvh.w, self.pvh.pvh.hists, inf_replace = np.nan, check_miss = check_miss)
         anom_ranks = np.arange(nrow(test_x))
         anom_ranks = anom_ranks[order(-nll)]
-        return LodaResult(anomranks=anom_ranks, nll=nll, pvh=self.pvh)
+        return nll #LodaResult(anomranks=anom_ranks, nll=nll, pvh=self.pvh)
+
 
