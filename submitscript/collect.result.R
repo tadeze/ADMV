@@ -1,4 +1,4 @@
-source('util.R')
+source('submitscript/util.R')
 
 cmd <- util.readcmd()
 

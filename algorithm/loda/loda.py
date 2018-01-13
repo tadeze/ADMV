@@ -1,7 +1,7 @@
 
 from common import *
-#NA = -9999.0
-NA = np.nan
+
+#NA = np.nan
 class ProjectionVectorsHistograms(object):
     def __init__(self, w=None, hists=None):
         """
@@ -260,9 +260,9 @@ class Loda(object):
             sp = self.sparsity
         logger.debug("loda: sparsity: %f" % sp)
         if self.original_dims:
-            pvh = self.get_original_proj(train_x)
+            pvh = self.get_original_proj(train_x,self.maxk,sp,self.keep,self.exclude)
         else:
-            pvh = self.get_best_proj(train_x)
+            pvh = self.get_best_proj(train_x,self.mink,self.maxk,sp,self.keep,self.exclude)
         self.pvh = pvh
     def score(self, test_x, check_miss=False):
         nll = self.get_neg_ll_all_hist(test_x, self.pvh.pvh.w, self.pvh.pvh.hists, inf_replace = np.nan, check_miss = check_miss)

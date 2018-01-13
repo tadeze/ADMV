@@ -6,11 +6,11 @@ from missvalueinjector import ADDetector, MissingValueInjector
 
 ## Set of experiments
 
-def algo_miss_features(train_x, label, file_name, miss_column, algorithm):
+def algo_miss_features(train_x, label, miss_column, algorithm):
          # Train the forest
     ensemble_size = 2  # run upto 4 times
     result = pd.DataFrame()
-    miss_prop = np.arange(0.05, 0.35, 0.05)
+    miss_prop = np.arange(0, 0.35, 0.05)
     fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
     ad_detector = ADDetector(alg_type=algorithm)
     mvi_object = MissingValueInjector()
@@ -23,12 +23,16 @@ def algo_miss_features(train_x, label, file_name, miss_column, algorithm):
                 test_x = train_x.copy()
                 mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
                 # Check the value.
-                ms_score = ad_detector.score(test_x, False)
+                ms_score = ad_detector.score(test_x.copy(), False)
                 mt = metric(label, ms_score)
                 # Check with missing values.
-                mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x),False))
-                mt_reduced = metric(label, ad_detector.score(test_x, True))
+                if num_missing*alpha>0:
+                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy()),False)) #impute
+                else:
+                    mt_impute = [0.0,0.0]
+                mt_reduced = metric(label, ad_detector.score(test_x, True)) #Bagging approach
                 # print "For ", [num_missing] + mt + [alpha]
+                #Append auc only
                 result = result.append(
                     pd.Series([alpha] + [num_missing /
                                                     float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] +[mt_impute[0]]
@@ -40,7 +44,7 @@ def algo_miss_features(train_x, label, file_name, miss_column, algorithm):
                   inplace=True)
     return result
 
-def random_miss_prop(train_x, label, algorithm, miss_column):
+def random_miss_prop(train_x, label,  miss_column, algorithm):
     """
     Assume all column of train_x can miss.
     :param train_x:
@@ -48,7 +52,6 @@ def random_miss_prop(train_x, label, algorithm, miss_column):
     :param algorithm:
     :return:
     """
-
     miss_prop = np.arange(0.0, 0.45, 0.05)
     result = pd.DataFrame()
     fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
@@ -63,7 +66,7 @@ def random_miss_prop(train_x, label, algorithm, miss_column):
         if alpha > 0:
             num_missing,_ = mvi_object.inject_missing_in_random_cell(test_x, alpha)
             # impute value and perform detection.
-            mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="simplefill"), check_miss=False))
+            mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="MICE"), check_miss=False))
         else:
             mt_impute = [0, 0]  # just assign 0 value when imputation is not applicable.
         ms_score = ad_detector.score(test_x, check_miss=False)
@@ -72,8 +75,7 @@ def random_miss_prop(train_x, label, algorithm, miss_column):
         # print "For ", [num_missing] + mt + [alpha]
 
         result = result.append(
-            pd.Series([alpha] + [num_missing /
-                                 float(len(miss_column))] + [mt_raw[0]] + [mt_reduced[0]] + [mt_impute[0]]
+            pd.Series([alpha] + [num_missing ] + [mt_raw[0]] + [mt_reduced[0]] + [mt_impute[0]]
                       + [algorithm]),
             ignore_index=True)
 
@@ -119,8 +121,6 @@ def miss_proportions_exp(train_x, label, miss_column, algorithm):
                            2: "auc", 3: "auc_reduced", 4: "auc_impute", 5: "ensemble_size", 6: "algorithm"},
                   inplace=True)
     return result
-
-
 
 
 
@@ -232,6 +232,7 @@ def main():
     parser.add_argument('-n', '--iteration', help="Number of iterations")
     parser.add_argument('-g', '--algorithm', help="Type of algorithm to use")
     parser.add_argument('-e', '--ensemble', help='Ensemble size. Defualt 1')
+    parser.add_argument('-t','--type', help="Experiment type.")
     args = parser.parse_args()
     df = pd.read_csv(args.input)
 
@@ -244,7 +245,7 @@ def main():
     else:
         train_lbl = df.ix[:, lbl]
 
-    train_data = df.ix[:, miss_colmn].as_matrix()
+    train_data = df.ix[:, miss_colmn].as_matrix().astype(np.float64)
     if args.missing is not None:
         miss_colmn = map(int, args.missing.split(','))
     else:
@@ -254,9 +255,13 @@ def main():
     # print df.ix[1:29,:]
 
     input_name = os.path.basename(args.input.name)
-    result = algo_miss_features(train_data, train_lbl, input_name, miss_colmn, str(args.algorithm).upper())
+    if args.type=='cell':
+        result = random_miss_prop(train_data, train_lbl, miss_colmn, str(args.algorithm).upper())
+    else:
+        result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper())
 
-    # # print train_lbl
+
+        # # print train_lbl
     # if args.algorithm == "loda":
     #     result = lod_miss_features(
     #         train_data, train_lbl, input_name, miss_colmn)
@@ -267,18 +272,17 @@ def main():
      #    result = pd.concat([result, miss_features(
      #        train_data, train_lbl, os.path.basename(args.input.name))])
     #result = None
-    #output_dir = "/scratch/cluster-share/zemicheal/missingdata/ensemble"
-    output_dir = "tempdir/"
+    output_dir = "/scratch/cluster-share/zemicheal/missingdata/kddexp"
+    #output_dir = "tempdir/"
     dir_name = os.path.join(output_dir, args.algorithm,
                             os.path.splitext(input_name)[0])
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-
-    result.to_csv(dir_name + '/results_iter_' +
+    experiment_type = args.type
+    result.to_csv(dir_name + '/'+experiment_type+'_results_iter_' +
                   str(args.iteration) + input_name)
 
     #grp = result.group_by(['anom_prop','num_miss_features']).agg([np.mean])
-
 
 if __name__ == '__main__':
     #test()

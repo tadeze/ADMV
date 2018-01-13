@@ -30,8 +30,9 @@ class ADDetector:
             self.ad_model.maxk = self.ad_model.maxk*k
         ## call train.
     def score(self, x_test, check_miss=True):
-        if check_miss:
-            x_test[np.isnan(x_test)] = MISSING_VALUE
+        # Replace the np.nan with large number.
+        #if check_miss:
+        x_test[np.isnan(x_test)] = MISSING_VALUE
         return self.ad_model.score(x_test, check_miss)
 
 
@@ -62,6 +63,8 @@ class MissingValueInjector(object):
         miss_att_list_len = len(miss_att_list)
         # print miss_att_list
         # Insert missing value at completley random.
+
+
         for index in missing_index:
             miss_att = np.random.choice(
                 miss_att_list, num_missing_attribute, replace=False)

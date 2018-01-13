@@ -30,7 +30,9 @@ BENCHMARK=$1
 FIELD=$2
 LABEL=$3
 ALGORITHM=$4
-MISSATT=$5
+MISSATT=$6
+TYPE=$5
+#echo $ALGORITHM
 #for btype in "${BenchType[@]}"
 #do
 #if [ -f "$BENCH_PATH$btype/$BENCHMARK/${BENCHMARK}.preproc.csv" ]
@@ -46,9 +48,9 @@ fi
 #which python
 if [ -z $MISSATT ];
 then
-	python missingdata.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM 
+	python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE 
 else
-	python missingdata.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -m $MISSATT
+	python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE -m $MISSATT
 
 fi
 #: print date and time again
