@@ -1,4 +1,4 @@
-import pyad as pft
+import algorithm.pyad as pft
 import numpy as np
 ## Build Forest using bagged features.
 

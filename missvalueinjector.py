@@ -2,7 +2,7 @@ from algorithm.loda.loda import Loda
 from algorithm import BaggedIForest
 from util.common import *
 import fancyimpute as fi
-import pyad as pft
+import algorithm.pyad as pft
 
 
 class ADDetector:
