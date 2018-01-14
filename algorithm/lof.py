@@ -13,7 +13,6 @@ class LOF(LocalOutlierFactor):
     def train(self, X):
         return self.fit(X)
 
-
     def score(self, X=None):
 
         check_is_fitted(self, ["threshold_", "negative_outlier_factor_",
@@ -27,9 +26,12 @@ class LOF(LocalOutlierFactor):
         else:
             is_inlier = np.ones(self._fit_X.shape[0], dtype=int)
             is_inlier[self.negative_outlier_factor_ <= self.threshold_] = -1
-
+            is_inlier = self.negative_outlier_factor_
         return is_inlier
 
+class BaggedLOF(object):
+    def __init__(self):
+        pass
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ def algo_miss_features(train_x, label, miss_column, algorithm):
                 mt = metric(label, ms_score)
                 # Check with missing values.
                 if num_missing*alpha>0:
-                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy()),False)) #impute
+                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="simpleFill"),False)) #impute
                 else:
                     mt_impute = [0.0,0.0]
                 mt_reduced = metric(label, ad_detector.score(test_x, True)) #Bagging approach

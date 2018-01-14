@@ -1,4 +1,4 @@
-import pyad as pft
+import algorithm.pyad as pft
 import numpy as np
 ## Build Forest using bagged features.
 
@@ -78,10 +78,9 @@ import numpy as np
 #         avg_depth = self.average_depth(test_df)
 #         scores = np.power(2, (-1 * avg_depth / bst(self.nsample)))
 #         return scores
-import logging
-logger = logging.getLogger(__name__)
-#NA = np.nan #-9999.0
-NA = -9999.0
+
+NA = np.nan #-9999.0
+
 class BaggedIForest(pft.IForest):
     def __init__(self, ntree=100, nsample=512,
                  max_height=0, adaptive=False, rangecheck=True):
@@ -111,10 +110,10 @@ class BaggedIForest(pft.IForest):
             self.trees_proj[tree,cols] = 1
 
             #logger.info("tree %d, %s"%(tree,cols))
-    def score(self, test_df, check_miss=True, faster=False):
+    def score(self, test_df, check_miss=True):
         self.num_tree_used = []# np.zeros([test_df.shape[0],1])
         self.check_miss = check_miss
-        self.faster = faster
+        #self.faster = faster
         return super(BaggedIForest, self).score(test_df)
 
     def get_trees(self, miss_features):
@@ -155,7 +154,8 @@ class BaggedIForest(pft.IForest):
         maskcol[miss_column] = False
         for trees_inst in non_missing_trees:
             tree = self.trees[trees_inst]
-            all_depth.append(tree["tree"].path_length(test_df[tree["cols"]]))
+            sliced_data = test_df[tree["cols"]]
+            all_depth.append(tree["tree"].path_length(sliced_data))
         self.num_tree_used.append(len(non_missing_trees))
         return all_depth
     #obsolute
