@@ -78,10 +78,9 @@ import numpy as np
 #         avg_depth = self.average_depth(test_df)
 #         scores = np.power(2, (-1 * avg_depth / bst(self.nsample)))
 #         return scores
-import logging
-logger = logging.getLogger(__name__)
-#NA = np.nan #-9999.0
-NA = -9999.0
+
+NA = np.nan #-9999.0
+
 class BaggedIForest(pft.IForest):
     def __init__(self, ntree=100, nsample=512,
                  max_height=0, adaptive=False, rangecheck=True):
@@ -100,21 +99,16 @@ class BaggedIForest(pft.IForest):
             self.nsample = nrow
         n_bagged = int(np.ceil(ncol/np.sqrt(ncol)))
         for tree in range(self.ntree):
-            # generate rotation matrix
             sample_index = np.random.choice(nrow, self.nsample, False)
             itree = pft.IsolationTree()
-            #itree.train_points = sample_index
             cols = np.random.choice(ncol, n_bagged, False)
-            #print cols
             itree.iTree(sample_index, train_df[:,cols], 0, self.max_height)
             self.trees.append({"tree": itree, "cols":cols})
             self.trees_proj[tree,cols] = 1
 
-            #logger.info("tree %d, %s"%(tree,cols))
-    def score(self, test_df, check_miss=True, faster=False):
+    def score(self, test_df, check_miss=True):
         self.num_tree_used = []# np.zeros([test_df.shape[0],1])
         self.check_miss = check_miss
-        self.faster = faster
         return super(BaggedIForest, self).score(test_df)
 
     def get_trees(self, miss_features):
@@ -153,9 +147,12 @@ class BaggedIForest(pft.IForest):
         non_missing_trees = self.available_trees(miss_column)
         maskcol = np.ones(test_df.shape, dtype=bool)
         maskcol[miss_column] = False
+        if len(non_missing_trees)<1:
+            return 0.0
         for trees_inst in non_missing_trees:
             tree = self.trees[trees_inst]
-            all_depth.append(tree["tree"].path_length(test_df[tree["cols"]]))
+            sliced_data = test_df[tree["cols"]]
+            all_depth.append(tree["tree"].path_length(sliced_data))
         self.num_tree_used.append(len(non_missing_trees))
         return all_depth
     #obsolute
@@ -173,7 +170,7 @@ class BaggedIForest(pft.IForest):
             miss_column = self.get_miss_features(test_df)
         else:
             miss_column = []
-        i=-1
+        i = -1
         for tree_inst in self.trees:
             i = i + 1
 
@@ -188,7 +185,6 @@ class BaggedIForest(pft.IForest):
                 all_depth.append(tree.path_length(test_df))
             tree_index.append(i)
         self.num_tree_used.append(len(all_depth))
-        #print all_depth, tree_index
         return all_depth
 import time
 if __name__ == '__main__':

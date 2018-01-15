@@ -97,3 +97,24 @@ def metric(label, score):
     auc = mt.roc_auc_score(label, score)
     ap = mt.average_precision_score(label, score)
     return [auc, ap]
+def get_miss_features(row):
+    """
+    :param row: np.ndarray of 1Xd vector.
+    :return:
+    """
+    if np.isnan(NA):
+        miss_column = np.where(np.isnan(row))[0]
+    else:
+        miss_column = np.where(row == NA)[0]
+    return miss_column
+def available_models(models_featues, miss_column):
+    """
+    Return trees without the missing column
+    :param miss_column:
+    :return:
+    """
+    if len(miss_column)==0:
+        return range(0,models_featues.shape[0])
+    with_miss_column = models_featues[:,miss_column]
+    available_models = np.where(~with_miss_column.any(axis=1))[0]
+    return available_models

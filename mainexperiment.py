@@ -27,7 +27,7 @@ def algo_miss_features(train_x, label, miss_column, algorithm):
                 mt = metric(label, ms_score)
                 # Check with missing values.
                 if num_missing*alpha>0:
-                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy()),False)) #impute
+                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="simpleFill"),False)) #impute
                 else:
                     mt_impute = [0.0,0.0]
                 mt_reduced = metric(label, ad_detector.score(test_x, True)) #Bagging approach
@@ -62,7 +62,7 @@ def random_miss_prop(train_x, label,  miss_column, algorithm):
     for alpha in miss_prop:
         # print alpha, num_missing
         test_x = train_x.copy()
-
+        #alpha = 0.15
         if alpha > 0:
             num_missing,_ = mvi_object.inject_missing_in_random_cell(test_x, alpha)
             # impute value and perform detection.
@@ -71,14 +71,19 @@ def random_miss_prop(train_x, label,  miss_column, algorithm):
             mt_impute = [0, 0]  # just assign 0 value when imputation is not applicable.
         ms_score = ad_detector.score(test_x, check_miss=False)
         mt_raw = metric(label, ms_score)
-        mt_reduced = metric(label, ad_detector.score(test_x, True))
+        reduced_score = ad_detector.score(test_x, True)
+        nanv = np.where(np.isnan(reduced_score))
+        if len(nanv)>0:
+            print nanv, reduced_score[nanv]
+            #print test_x[nanv,:]
+        mt_reduced = metric(label, reduced_score)
         # print "For ", [num_missing] + mt + [alpha]
 
         result = result.append(
             pd.Series([alpha] + [num_missing ] + [mt_raw[0]] + [mt_reduced[0]] + [mt_impute[0]]
                       + [algorithm]),
             ignore_index=True)
-
+        print result
     result.rename(columns={0: "anom_prop", 1: "num_max_miss_features",
                            2: "auc", 3: "auc_reduced", 4: "auc_impute", 5: "algorithm"},
                   inplace=True)

@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 logger = logging.getLogger(__name__)
-NA = -9999.0
+NA = np.nan #-9999.0
 
 def nrow(x):
     if len(x.shape) == 2:
@@ -136,8 +136,8 @@ def histogram_r(x, g1=1., g2=1., g3=-1., verbose=False):
                       breaks=np.array(breaks, dtype=float))
     return hist
 def get_bin_for_equal_hist(breaks, x):
-    #if np.isnan(x):
-    #    return 0
+    if np.isnan(x):
+        return 0
     if x < breaks[0]:
         return 0
     if x > breaks[len(breaks)-1]:
