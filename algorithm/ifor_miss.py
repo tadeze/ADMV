@@ -235,6 +235,7 @@ if __name__ == '__main__':
 
     #print ff.num_tree_used
 
+    ff = pft.IsolationForest()
 
 
 

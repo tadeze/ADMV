@@ -1,6 +1,7 @@
 from algorithm.loda.loda import Loda
 from algorithm import BaggedIForest
 import algorithm.pyad as pft
+from algorithm.lof import BaggedLOF
 from util.common import *
 import fancyimpute as fi
 
@@ -19,8 +20,12 @@ class ADDetector:
             self.ad_model = BaggedIForest(ntree=100*ensemble_size)
         elif self.alg_type == "IFOR":
             self.ad_model = pft.IsolationForest(ntree=100*ensemble_size)
-        else:
+        elif self.alg_type =="LOF":
+            self.ad_model = BaggedLOF(num_model=40)
+        elif self.alg_type == "LODA":
             self.ad_model = Loda(maxk=100*ensemble_size)
+        else:
+            return ValueError("Incorrect algorithm name")
         self.ad_model.train(x_train)
 
     def increase_ensemble(self, k):

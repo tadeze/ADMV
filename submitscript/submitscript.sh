@@ -12,8 +12,9 @@
 #$ -j y
 
 # select queue - if needed 
-#$ -q eecs,eecs2,share,share2,share3,share4
-
+#$ -q em64t,eecs,eecs2,share,share2,share3,share4
+# 5 cpu will be used. 
+#$ -pe thread 5
 # see where the job is being run
 #hostname
 hostname

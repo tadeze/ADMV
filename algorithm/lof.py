@@ -93,8 +93,11 @@ if __name__ == '__main__':
 
     ll = LOF()
     import pandas as pd
-    df = pd.read_csv('/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv')
+
+    file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
+    df = pd.read_csv(file_name) #'../yeast_1.csv')
     train_data = df.ix[:, 1:].as_matrix().astype(np.float64)
+    print train_data.shape
     # train_lbl = df.ix[:,0] #
     train_lbl = map(int, df.ix[:, 0] == "anomaly")
     w = np.random.randn(100,5)
@@ -107,18 +110,18 @@ if __name__ == '__main__':
     #print ff.score(w)
     #import sklearn
     #print sklearn.__version__
-    lb = BaggedLOF(num_model=40)
+    lb = BaggedLOF(num_model=4)
     lb.train(train_data)
     #print lb.models
     sc =  lb.score(train_data)
-    train_data[0,1] = np.nan
-    train_data[1,3] = np.nan
+   # train_data[0,1] = np.nan
+    #train_data[1,3] = np.nan
     print sc[0:3]
 
     sx = lb.score(train_data[0:3,],True)
     print sx
     print "Assume not handled"
-    sx = lb.score(train_data[0:3, ], False)
-    print sx
+    #sx = lb.score(train_data[0:3, ], False)
+    #print sx
 
     print metric(train_lbl,sc )
