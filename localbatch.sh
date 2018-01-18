@@ -1,5 +1,5 @@
-FIELD=5
-LABEL=4
+#FIELD=5
+#LABEL=4
 ALGORITHM=('loda' 'ifor' 'bifor')
 BENCHMARK=$1
 FIELD=$2

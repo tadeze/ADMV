@@ -24,7 +24,7 @@ def submit_job(n):
 		command = "python mainexperiment.py -i " + args.input.name +" -c "+args.column+\
      " -l " + args.label+" -n "+str(n)+" -g "+ algo +" -t "+ args.type+\
      " -o "+args.outputdir
-		print (command) 
+		os.system(command) 
 	return True 
 
 

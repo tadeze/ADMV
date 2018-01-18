@@ -1,10 +1,43 @@
 import pandas as pd
 import argparse
 import os
+import multiprocessing
+from joblib import Parallel, delayed
+
+
 from util.common import *
 from missvalueinjector import ADDetector, MissingValueInjector
 
 ## Set of experiments
+
+
+
+
+def squareIt(nn, i, j):
+    return [nn, i, j, i ** 2 + j ** 2]
+
+
+def miss_feature_experiment(train_x, mvi_object, miss_column,
+                            ad_detector, label, alpha, num_missing):
+    test_x = train_x.copy()
+    mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
+    # Check with missing values.
+    if num_missing * alpha > 0:
+        # Check the value.
+        ms_score = ad_detector.score(mvi_object.impute_value(test_x.copy(), "SimpleFill"), False)
+        mt = metric(label, ms_score)
+        mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(), method="MICE"),
+                                                    False))  # impute
+    else:
+        ms_score = ad_detector.score(test_x, False)
+        mt = metric(label, ms_score)
+        mt_impute = mt
+    mt_reduced = metric(label, ad_detector.score(test_x, True))  # Bagging approach
+    return [alpha] + [num_missing /
+               float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]] #+ [algorithm]
+
+
+
 
 def algo_miss_features(train_x, label, miss_column, algorithm):
          # Train the forest
@@ -14,34 +47,34 @@ def algo_miss_features(train_x, label, miss_column, algorithm):
     fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
     ad_detector = ADDetector(alg_type=algorithm)
     mvi_object = MissingValueInjector()
-    for en_size in range(1, ensemble_size):
-        ad_detector.train(train_x, ensemble_size=en_size)
-        for alpha in miss_prop:
-            for num_missing in range(1, fraction_missing_features):
+
+    ad_detector.train(train_x, ensemble_size=ensemble_size)
+    num_cores = multiprocessing.cpu_count()
+    # exp_result = Parallel(n_jobs=num_cores)(delayed(miss_feature_experiment)
+    #                                         (train_x=train_x, mvi_object=mvi_object, miss_column=miss_column,
+    #                                          ad_detector=ad_detector, label=label, alpha=_alpha, num_missing= miss_p)
+    #                                         for miss_p in miss_prop for _alpha in range(1,fraction_missing_features))
+    #
+
+    exp_result = Parallel(n_jobs=num_cores)(delayed(squareIt)(ad_detector, i, j) for i ,j in zip(range(10),range(8)))
+
+    #for en_size in range(1, ensemble_size):
+        #for alpha in miss_prop:   ## Need to parallel this and
+         #   for num_missing in range(1, fraction_missing_features):
 
                 #print alpha, num_missing
-                test_x = train_x.copy()
-                mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
 
-                # Check with missing values.
-                if num_missing*alpha>0:
-                    # Check the value.
-                    ms_score = ad_detector.score(mvi_object.impute_value(test_x.copy(), "SimpleFill"), False)
-                    mt = metric(label, ms_score)
-                    mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="MICE"),False)) #impute
-                else:
-                    ms_score = ad_detector.score(test_x, False)
-                    mt = metric(label, ms_score)
-                    mt_impute = mt
-                mt_reduced = metric(label, ad_detector.score(test_x, True)) #Bagging approach
-                result = result.append(
-                    pd.Series([alpha] + [num_missing /
-                                                    float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] +[mt_impute[0]]
-                              +[en_size] + [algorithm]),
-                    ignore_index=True)
+    #result = result.append(pd.Series(exp_result), ignore_index=True)
+    result = pd.DataFrame(exp_result)
+    print result
+    # result = result.append(
+    #     pd.Series([alpha] + [num_missing /
+    #                                     float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] +[mt_impute[0]]
+    #               +[en_size] + [algorithm]),
+    #     ignore_index=True)
 
     result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
-                           2: "auc_mean_impute",  3: "auc_reduced", 4: "auc_MICE_impute", 5: "ensemble_size", 6:"algorithm"},
+                           2: "auc_mean_impute",  3: "auc_reduced", 4: "auc_MICE_impute", 5: "ensemble_size"}, #, 6:"algorithm"},
                   inplace=True)
     return result
 
