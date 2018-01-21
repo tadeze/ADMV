@@ -4,15 +4,15 @@ import algorithm.pyad as pft
 from algorithm.lof import BaggedLOF
 from util.common import *
 import fancyimpute as fi
-
+from algorithm import Egmm
 
 
 class ADDetector:
-    def __init__(self, alg_type="IFOR"):
+    def __init__(self, alg_type="IFOR", label=0):
         self.alg_type = alg_type.upper()
+        self.label = label
 
-
-    def train(self, x_train, ensemble_size=1):
+    def train(self, x_train, ensemble_size=1, file_name=None):
         """
         Train algorithm, based on its type.
         """
@@ -24,6 +24,17 @@ class ADDetector:
             self.ad_model = BaggedLOF(num_model=30)
         elif self.alg_type == "LODA":
             self.ad_model = Loda(maxk=100*ensemble_size)
+        elif self.alg_type == "EGMM":
+            if file_name is None:
+                return ValueError("No correct file name given")
+
+            ## Train egmm model
+            self.ad_model = Egmm()
+            self.model_output = file_name+".mdl"
+            self.score_out = file_name+".sc"
+            self.ad_model.train(file_name,dims=x_train.shape[1],model_output=self.model_output, score_out=score_out,
+                                skip_cols=self.label+1)
+            return 0
         else:
             return ValueError("Incorrect algorithm name")
         self.ad_model.train(x_train)
@@ -38,6 +49,8 @@ class ADDetector:
         # Replace the np.nan with large number.
         #if check_miss:
         #x_test[np.isnan(x_test)] = MISSING_VALUE
+        if self.alg_type =="EGMM":
+            return self.ad_model.score(x_test,x_test.shape[1],self.model_output,self.score_out)
         return self.ad_model.score(x_test, check_miss)
 
 

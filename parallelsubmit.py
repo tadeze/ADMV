@@ -1,6 +1,6 @@
 import argparse
 import os
-import multiprocessing 
+import multiprocessing
 from joblib import Parallel, delayed
 
 parser = argparse.ArgumentParser(description="Experiment parallel")
@@ -18,15 +18,15 @@ parser.add_argument('-o', '--outputdir', help="Output directory location")
 args = parser.parse_args()
 exp_type="features"
 iteration = int(args.iteration)
-algorithm=("loda","ifor","bifor", "lof")
+algorithm=("loda","ifor","bifor")
 def submit_job(n):
 	for algo in algorithm:
 		command = "python mainexperiment.py -i " + args.input.name +" -c "+args.column+\
      " -l " + args.label+" -n "+str(n)+" -g "+ algo +" -t "+ args.type+\
      " -o "+args.outputdir
 		os.system (command)
-	return True 
+	return True
 
 
 num_cores = multiprocessing.cpu_count()
-result = Parallel(n_jobs=num_cores)(delayed(submit_job)(i) for i in range(0,iteration))
+result = Parallel(n_jobs=num_cores)(delayed(submit_job)(i) for i in range(5,iteration))
