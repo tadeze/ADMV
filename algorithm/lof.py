@@ -9,7 +9,7 @@ class LOF(LocalOutlierFactor):
     def __init__(self, n_neighbors=20):
         super(LOF, self).__init__(n_neighbors=n_neighbors, algorithm='auto', leaf_size=30,
                  metric='minkowski', p=2, metric_params=None,
-                 contamination=0.1, n_jobs=1)
+                 contamination=0.1, n_jobs=-1)
 
     def train(self, X):
         return self.fit(X)
@@ -94,34 +94,37 @@ if __name__ == '__main__':
     ll = LOF()
     import pandas as pd
 
-    file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    df = pd.read_csv(file_name) #'../yeast_1.csv')
+    #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
+    df = pd.read_csv('../yeast_1.csv')
     train_data = df.ix[:, 1:].as_matrix().astype(np.float64)
-    print train_data.shape
-    # train_lbl = df.ix[:,0] #
+    #print train_data.shape
+    #train_lbl = df.ix[:,0] #
     train_lbl = map(int, df.ix[:, 0] == "anomaly")
-    w = np.random.randn(100,5)
-    w[1,2] = 20
-    w[5,0]  = -30
-    lbl = np.zeros([1, w.shape[0]])
-    lbl[:,[1,5]] = 1
+    # w = np.random.randn(100,5)
+    # w[1,2] = 20
+    # w[5,0]  = -30
+    #lbl = np.zeros([1, w.shape[0]])
+    #lbl[:,[1,5]] = 1
     #print lbl[0]
-    ff = ll.train(w)
+    #ff = ll.train(w)
     #print ff.score(w)
     #import sklearn
     #print sklearn.__version__
-    lb = BaggedLOF(num_model=4)
+    from time import time
+    start = time()
+    lb = BaggedLOF(num_model=1)
     lb.train(train_data)
     #print lb.models
     sc =  lb.score(train_data)
    # train_data[0,1] = np.nan
     #train_data[1,3] = np.nan
-    print sc[0:3]
+    #print sc[0:3]
 
-    sx = lb.score(train_data[0:3,],True)
-    print sx
-    print "Assume not handled"
+    #sx = lb.score(train_data[0:3,],True)
+    #print sx
+    #print "Assume not handled"
     #sx = lb.score(train_data[0:3, ], False)
     #print sx
 
     print metric(train_lbl,sc )
+    print time() - start

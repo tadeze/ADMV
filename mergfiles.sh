@@ -1,6 +1,7 @@
 #!/bin/bash 
 dirname=$1
-for filename in $dirname/cell*.csv; do
-tail -n +2 $filename >>cell_alldata.csv
+output=$2
+for filename in $dirname/*.csv; do
+tail -n +2 $filename >>$output
 echo "File .. $filename ..merged"
 done

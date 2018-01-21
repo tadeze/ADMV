@@ -18,13 +18,13 @@ parser.add_argument('-o', '--outputdir', help="Output directory location")
 args = parser.parse_args()
 exp_type="features"
 iteration = int(args.iteration)
-algorithm=("loda","ifor","bifor")	
+algorithm=("loda","ifor","bifor", "lof")
 def submit_job(n):
 	for algo in algorithm:
 		command = "python mainexperiment.py -i " + args.input.name +" -c "+args.column+\
      " -l " + args.label+" -n "+str(n)+" -g "+ algo +" -t "+ args.type+\
      " -o "+args.outputdir
-		print (command) 
+		os.system (command)
 	return True 
 
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #benchmark=$1
 #field=$2
 #label=$3
@@ -6,9 +7,11 @@
 ###   {cell, feature}
 FIELD=5
 LABEL=4
-ALGORITHM=('loda' 'ifor' 'bifor')
 #name=`basename $benchmark`
 EXP_TYPE=$1
+ALGO=$2
+ALGORITHM=('loda' 'ifor' 'bifor' 'lof')
+OUTDIR=/scratch/cluster-share/zemicheal/missingdata/kddexp/motherset
 #Dataset location 
 BENCH_PATH=/nfs/guille/bugid/adams/meta_analysis/mothersets/
 BenchType=(binary multiclass regression);
@@ -26,13 +29,18 @@ do
 		#echo $DATASET 
 		if [ -f $DATASET ]
 		then
-			for ALGO in "${ALGORITHM[@]}"
-			do
+		    if [ -z $ALGO ];
+		    then
+		         for ALGO in "${ALGORITHM[@]}"
+                 do
+                     qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $ALGO $EXP_TYPE $OUTDIR
+                 done
 
- 				qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $ALGO $EXP_TYPE
- 			done	
+            else
+                 echo "Only $ALGO, will be used"
+		         qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $ALGO $EXP_TYPE $OUTDIR
 
-#			echo "$DATASET"
+		    fi
 		fi
 	done
 

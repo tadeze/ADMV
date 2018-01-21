@@ -21,7 +21,7 @@ class ADDetector:
         elif self.alg_type == "IFOR":
             self.ad_model = pft.IsolationForest(ntree=100*ensemble_size)
         elif self.alg_type =="LOF":
-            self.ad_model = BaggedLOF(num_model=40)
+            self.ad_model = BaggedLOF(num_model=30)
         elif self.alg_type == "LODA":
             self.ad_model = Loda(maxk=100*ensemble_size)
         else:
