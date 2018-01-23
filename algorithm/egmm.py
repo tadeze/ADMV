@@ -21,7 +21,7 @@ class Egmm:
         os.system(command)
     def score(self, test_x, dims, model_input, score_out):
         file_name = os.path.join(tempresult,"texmp.txt")
-        print file_name
+        #print file_name
         if os.path.exists(file_name):
             os.remove(file_name)
         header = ",".join([ "V"+str(i) for i in range(0,test_x.shape[1])])
