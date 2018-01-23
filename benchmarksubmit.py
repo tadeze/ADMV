@@ -44,10 +44,15 @@ def submit_benchmark_files():
     flag = int(args.label)
     for file_name in os.listdir(input_dir):
         bench_name = file_name.split("_")[0].split('.csv')[0]
-        column = str(flag+1) + "-" + str(file_description[bench_name] + flag +1)
+        column = str(flag+1) + "-" + str(file_description[bench_name] + flag)
         full_path =  os.path.join(input_dir, file_name)
-        command = "qsub -t 1-"+args.iteration+ " -N "+bench_name+" submitscript/submitscript.sh "+ \
-            full_path + " " + column+ " " + str(flag) + " " + "ifor "+ args.type + " " + args.outputdir
+	if args.type=="del":
+		command = "qdel {0:s}".format(bench_name)
+		os.system(command)
+		continue
+	
+	command = "qsub -t 1-"+args.iteration+ " -N "+bench_name+" submitscript/submitscript.sh "+ \
+            full_path + " " + column+ " " + str(flag) + " "+ args.type + " " + args.outputdir
         if bench_name=="particle" or bench_name=="magic.gamma":
             continue
         os.system(command)

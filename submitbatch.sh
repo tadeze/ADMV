@@ -10,7 +10,7 @@ LABEL=4
 #name=`basename $benchmark`
 EXP_TYPE=$1
 ALGO=$2
-ALGORITHM=('loda' 'ifor' 'bifor' 'lof')
+ALGORITHM=('loda' 'ifor' 'egmm')
 OUTDIR=/scratch/cluster-share/zemicheal/missingdata/kddexp/motherset
 #Dataset location 
 BENCH_PATH=/nfs/guille/bugid/adams/meta_analysis/mothersets/
@@ -33,12 +33,12 @@ do
 		    then
 		         for ALGO in "${ALGORITHM[@]}"
                  do
-                     qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $ALGO $EXP_TYPE $OUTDIR
+                     qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $EXP_TYPE $OUTDIR $ALGO
                  done
 
             else
                  echo "Only $ALGO, will be used"
-		         qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $ALGO $EXP_TYPE $OUTDIR
+		         qsub -N $BENCHNAME -t 1-30 submitscript/submitscript.sh $DATASET $FIELD $LABEL $EXP_TYPE $OUTDIR $ALGO
 
 		    fi
 		fi

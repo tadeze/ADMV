@@ -10,7 +10,7 @@ from util.common import metric
 def test():
     file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
     #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
-
+    file_name ="yeast_1.csv"
     df = pd.read_csv(file_name)
     train_data = df.ix[:,1:].as_matrix().astype(np.float64)
     #train_lbl = df.ix[:,0] #
@@ -19,8 +19,8 @@ def test():
 
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
-    result = random_miss_prop(
-         train_data, train_lbl, miss_colmn,'LOF')
+    result = algo_miss_features(
+         train_data, train_lbl, miss_colmn,'EGMM',file_name)
     print result
 def test_loda():
     pass
@@ -55,7 +55,7 @@ def test_cell_injector():
 
     #print pft.__file__
 if __name__ == '__main__':
-    #test()
-    dd = 'concrete'
-    check_metric('/nfs/guille/bugid/adams/meta_analysis/mothersets/regression/'+dd+'/'+dd+'.preproc.csv')
+    test()
+    #dd = 'concrete'
+    #check_metric('/nfs/guille/bugid/adams/meta_analysis/mothersets/regression/'+dd+'/'+dd+'.preproc.csv')
     #test_cell_injector()

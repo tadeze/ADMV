@@ -4,6 +4,8 @@ import os
 from util.common import *
 from missvalueinjector import ADDetector, MissingValueInjector
 
+
+
 ## Set of experiments
 
 # from algorithm.egmm import Egmm
@@ -12,16 +14,17 @@ from missvalueinjector import ADDetector, MissingValueInjector
 #     egmm.train(file_name, dims=dims, skip_cols=skip_left)
 #     score = egmm.score(file_name,dims=dims,skip_cols= skip_left)
 
-def algo_miss_features(train_x, label, miss_column, algorithm, file_name):
+def algo_miss_features(train_x, label, miss_column, algorithm, file_name, label_field=0):
          # Train the forest
     ensemble_size = 2  # run upto 4 times
     result = pd.DataFrame()
     miss_prop = np.arange(0, 1.1, 0.1)
     d = len(miss_column)
     fraction_missing_features = int(np.ceil(d /np.sqrt(d)))
-    ad_detector = ADDetector(alg_type=algorithm)
+    ad_detector = ADDetector(alg_type=algorithm, label=label_field)
     mvi_object = MissingValueInjector()
     for en_size in range(1, ensemble_size):
+
         ad_detector.train(train_x, ensemble_size=en_size, file_name=file_name)
         for alpha in miss_prop:
             for num_missing in range(1, fraction_missing_features):
@@ -186,9 +189,10 @@ def main():
     parser.add_argument('-n', '--iteration', help="Number of iterations")
     parser.add_argument('-g', '--algorithm', help="Type of algorithm to use")
     parser.add_argument('-e', '--ensemble', help='Ensemble size. Defualt 1')
-    parser.add_argument('-t','--type', help="Experiment type.")
+    parser.add_argument('-t', '--type', help="Experiment type.")
     parser.add_argument('-o', '--outputdir', help="Output directory location")
     args = parser.parse_args()
+
     df = pd.read_csv(args.input)
     if args.outputdir is None:
             output_dir = "/scratch/cluster-share/zemicheal/missingdata/kddexp"
@@ -224,7 +228,7 @@ def main():
                                   file_name=args.input.name)
     else:
         result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
-                                    file_name=args.input.name)
+                                    file_name=args.input.name, label_field=args.label)
 
 
         # # print train_lbl
