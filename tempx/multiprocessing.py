@@ -2,8 +2,8 @@ import pandas as pd
 import argparse
 import os
 from missvalueinjector import ADDetector, MissingValueInjector
-import multiprocessing
-from joblib import Parallel, delayed
+#import multiprocessing
+#from joblib import Parallel, delayed
 from util.common import metric
 import numpy as np
 def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
@@ -33,7 +33,7 @@ def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
     #return result
 
 import time
-def algo_miss_features(train_x, label, miss_column, algorithm, file_name, label_field=0):
+def algo_miss_featuresX(train_x, label, miss_column, algorithm, file_name, label_field=0):
          # Train the forest
     global  mvi_object
     global ad_detector
@@ -69,7 +69,7 @@ def algo_miss_features(train_x, label, miss_column, algorithm, file_name, label_
     return result
 
 
-def random_miss_prop(train_x, label,  miss_column, algorithm, file_name):
+def random_miss_propX(train_x, label,  miss_column, algorithm, file_name):
     """
     Assume all column of train_x can miss.
     :param train_x:
@@ -119,7 +119,7 @@ def random_miss_prop(train_x, label,  miss_column, algorithm, file_name):
 
 
 
-def main():
+def mainX():
     parser = argparse.ArgumentParser(description="iForest usage switches")
     parser.add_argument('-i', '--input', type=argparse.FileType('r'),
                         help="Required input file", required=True)
@@ -164,10 +164,10 @@ def main():
 
     input_name = os.path.basename(args.input.name)
     if args.type=='cell':
-        result = random_miss_prop(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+        result = random_miss_propX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
                                   file_name=args.input.name)
     else:
-        result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+        result = algo_miss_featuresX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
                                     file_name=args.input.name, label_field=args.label)
 
 
@@ -195,4 +195,4 @@ def main():
 
 if __name__ == '__main__':
     #test()
-    main()
+    mainX()

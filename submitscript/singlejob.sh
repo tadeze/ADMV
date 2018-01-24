@@ -10,7 +10,7 @@
 #$ -N motherset
 
 # send stdout and stderror to this file
-#$ -o error/${TASK_ID}_$6.out
+#$ -o error/$TASK_ID.out
 #$ -j y
 
 # select queue - if needed
