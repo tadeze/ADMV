@@ -27,6 +27,7 @@ def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
     else:
         mt = mt_impute = [0.0, 0.0]  # Just to reduce computation, only run reduced approach when BIFOR is used.
     mt_reduced = metric(label, ad_detector.score(test_x, True))  # Bagging approach
+    print mt_reduced
     return    pd.Series([alpha] + [num_missing /
                              float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]]
                         + [algorithm])

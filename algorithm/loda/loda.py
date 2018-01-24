@@ -160,7 +160,10 @@ class Loda(object):
             if len(miss_column) > 0:
                 w_miss = w[miss_column, :]
                 idx_miss = np.where(~w_miss.any(axis=0))[0].tolist()
-                x = a[i, :].dot(w[:, idx_miss])
+                temp = a[i, :].copy()  ## small hack to replace nan with any number because nan*0 doesn't give real number.
+                temp[np.isnan(temp)] = -9999999999999.0
+                x = temp.dot(w[:, idx_miss])
+
                 for ix, ihist in enumerate(idx_miss):
                     hpdfs[i, ihist] = pdf_hist(x[ix], hists[ihist])
             else:

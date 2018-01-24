@@ -74,7 +74,7 @@ class MissingValueInjector(object):
 
 
     def inject_missing_value(self, data, num_missing_attribute, alpha,
-                             miss_att_list):
+                             miss_att_list=[]):
 
         missing_amount = int(np.ceil(data.shape[0] * alpha))
         missing_index = np.random.choice(

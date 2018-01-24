@@ -10,7 +10,7 @@ LABEL=4
 #name=`basename $benchmark`
 EXP_TYPE=$1
 ALGO=$2
-ALGORITHM=('loda' 'ifor' 'egmm')
+ALGORITHM=('loda' 'ifor') # 'egmm')
 OUTDIR=/scratch/cluster-share/zemicheal/missingdata/kddexp/motherset
 #Dataset location 
 BENCH_PATH=/nfs/guille/bugid/adams/meta_analysis/mothersets/

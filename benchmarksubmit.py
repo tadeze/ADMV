@@ -52,8 +52,10 @@ def submit_benchmark_files():
 		continue
 	
 	command = "qsub -t 1-"+args.iteration+ " -N "+bench_name+" submitscript/submitscript.sh "+ \
-            full_path + " " + column+ " " + str(flag) + " "+ args.type + " " + args.outputdir
-        if bench_name=="particle" or bench_name=="magic.gamma":
+            full_path + " " + column+ " " + str(flag) + " "+ args.type + " " + args.outputdir +" " + \
+        args.algorithm
+
+        if bench_name=="particle": # or bench_name=="magic.gamma":
             continue
         os.system(command)
 if __name__ == '__main__':

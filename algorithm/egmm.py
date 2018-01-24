@@ -20,7 +20,8 @@ class Egmm:
         #print command
         os.system(command)
     def score(self, test_x, dims, model_input, score_out):
-        file_name = os.path.join(tempresult,"texmp.txt")
+        num = np.random.randint(0,99999)
+        file_name = os.path.join(tempresult, os.path.basename(model_input)+"_"+str(num)+"_texmp.txt")
         #print file_name
         if os.path.exists(file_name):
             os.remove(file_name)

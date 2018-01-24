@@ -18,14 +18,15 @@ def test():
     miss_colmn = range(0,5)
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
+    # start = time.time()
+    # result = algo_miss_features(
+    #      train_data, train_lbl, miss_colmn,'egmm',file_name)
+    # print result
+    #
+    # print time.time() - start
     start = time.time()
     result = algo_miss_features(
-         train_data, train_lbl, miss_colmn,'ifor',file_name)
-    print result
-    print time.time() - start
-    start = time.time()
-    result = algo_miss_featuresX(
-        train_data, train_lbl, miss_colmn, 'ifor', file_name)
+        train_data, train_lbl, miss_colmn, 'egmm', file_name)
     print time.time() - start
     print result
 
