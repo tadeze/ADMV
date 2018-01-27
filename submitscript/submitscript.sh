@@ -14,14 +14,14 @@
 # select queue - if needed 
 
 # 5 cpu will be used. 
-#$ -pe thread 5 
+#$ -pe thread 5
 # see where the job is being run
 #hostname
 hostname
 #which python 
 #export python=/
-# print date and time
-#date
+#print date and time
+date
 #set ff=$1
 # Sleep for 20 seconds
 #REP=$2
@@ -73,5 +73,5 @@ else
 
 fi
 
-#: print date and time again
-#date
+#print date and time again
+date

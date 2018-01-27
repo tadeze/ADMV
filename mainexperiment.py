@@ -6,28 +6,33 @@ from missvalueinjector import ADDetector, MissingValueInjector
 from joblib import Parallel, delayed
 import multiprocessing
 
-
+def replace_with_nan(index, df):
+    df[index] = np.nan
 def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
     # print alpha, num_missing
-    test_x = train_x.copy()
-    mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
+    test_x = train_x
+    miss_index = mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
+
     if algorithm.upper() != 'BIFOR':
 
         # Check with missing values.
         if num_missing * alpha > 0:
             # Check the value.
-            ms_score = ad_detector.score(mvi_object.impute_value(test_x.copy(), "SimpleFill"), False)
+            ms_score = ad_detector.score(mvi_object.impute_value(test_x, "SimpleFill"), False)
             mt = metric(label, ms_score)
-            mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(), method="MICE"),
+            replace_with_nan(miss_index, test_x)
+            mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x, method="MICE"),
                                                         False))  # impute
         else:
+            replace_with_nan(miss_index, test_x)
             ms_score = ad_detector.score(test_x, False)
             mt = metric(label, ms_score)
             mt_impute = mt
     else:
         mt = mt_impute = [0.0, 0.0]  # Just to reduce computation, only run reduced approach when BIFOR is used.
+    replace_with_nan(miss_index, test_x)
     mt_reduced = metric(label, ad_detector.score(test_x, True))  # Bagging approach
-    print mt_reduced
+    #print mt_reduced
     return    pd.Series([alpha] + [num_missing /
                              float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]]
                         + [algorithm])
@@ -40,7 +45,7 @@ def algo_miss_featuresX(train_x, label, miss_column, algorithm, file_name, label
     global ad_detector
     miss_prop = np.arange(0, 1.1, 0.1)
     d = len(miss_column)
-    fraction_missing_features = int(np.ceil(d / np.sqrt(d)))
+    fraction_missing_features = int(np.ceil(d * 0.8)) #int(np.ceil(d / np.sqrt(d)))
     ad_detector = ADDetector(alg_type=algorithm, label=label_field)
     mvi_object = MissingValueInjector()
     ad_detector.train(train_x, ensemble_size=1, file_name=file_name)
@@ -64,7 +69,7 @@ def algo_miss_features(train_x, label, miss_column, algorithm, file_name, label_
     result = pd.DataFrame()
     miss_prop = np.arange(0, 1.1, 0.1)
     d = len(miss_column)
-    fraction_missing_features = int(np.ceil(d /np.sqrt(d)))
+    fraction_missing_features = int(np.ceil(len(miss_column) * 0.8)) # int(np.ceil(d /np.sqrt(d)))
     ad_detector = ADDetector(alg_type=algorithm, label=label_field)
     mvi_object = MissingValueInjector()
     for en_size in range(1, ensemble_size):
@@ -271,7 +276,11 @@ def main():
         result = random_miss_prop(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
                                   file_name=args.input.name)
     else:
-        result = algo_miss_featuresX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+        if str(args.algorithm).upper()=="EGMM":
+            result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+                                         file_name=args.input.name, label_field=args.label)
+        else:
+            result = algo_miss_featuresX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
                                     file_name=args.input.name, label_field=args.label)
 
 

@@ -7,6 +7,7 @@ import pandas as pd
 from algorithm.lof import BaggedLOF
 from util.common import metric
 import time
+np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
     #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
@@ -25,8 +26,8 @@ def test():
     #
     # print time.time() - start
     start = time.time()
-    result = algo_miss_features(
-        train_data, train_lbl, miss_colmn, 'egmm', file_name)
+    result = algo_miss_featuresX(
+        train_data, train_lbl, miss_colmn, 'ifor', file_name)
     print time.time() - start
     print result
 

@@ -89,6 +89,7 @@ class MissingValueInjector(object):
                 miss_att_list, num_missing_attribute, replace=False)
             if len(miss_att) > 0:
                 data[index, miss_att] = np.nan #MISSING_VALUE
+        return np.where(np.isnan(data))  #Return index of affected cells.
     def inject_missing_in_random_cell(self, data,  alpha):
 
         """

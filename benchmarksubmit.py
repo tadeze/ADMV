@@ -1,23 +1,26 @@
 import argparse
 import os
 import multiprocessing
-from joblib import Parallel, delayed
-def main():
+#from joblib import Parallel, delayed
 
+
+def main():
     parser = argparse.ArgumentParser(description="Experiment parallel")
-    #parser.add_argument('-i', '--input', type=argparse.FileType('r'),
-     #                   help="Required input file", required=True)
+    # parser.add_argument('-i', '--input', type=argparse.FileType('r'),
+    #                   help="Required input file", required=True)
     parser.add_argument('-c', '--column', help="Column hypheneted")
     parser.add_argument('-m', '--missing', help="Missing injection columns")
     parser.add_argument('-l', '--label', help="Ground flag label")
     parser.add_argument('-n', '--iteration', help="Number of iterations")
     parser.add_argument('-g', '--algorithm', help="Type of algorithm to use")
-    #parser.add_argument('-n', '--iteration', help='Iteration size. Defualt 1')
-    parser.add_argument('-t','--type', help="Experiment type.")
+    # parser.add_argument('-n', '--iteration', help='Iteration size. Defualt 1')
+    parser.add_argument('-t', '--type', help="Experiment type.")
     parser.add_argument('-o', '--outputdir', help="Output directory location")
+    parser.add_argument('-s','--server', help="Server type. Either `cluter` or `local`")
 
     args = parser.parse_args()
     return args
+
 
 def submit_job(n):
     args = main()
@@ -26,37 +29,74 @@ def submit_job(n):
     algorithm = ("loda", "ifor", "bifor", "lof")
 
     for algo in algorithm:
-        command = "python mainexperiment.py -i " + args.input.name +" -c "+args.column+\
-     " -l " + args.label+" -n "+str(n)+" -g "+ algo +" -t "+ args.type+\
-     " -o "+args.outputdir
-	os.system (command)
-	return True
-input_dir ="../dataset"
-file_description = {'skin':3,
-'magic.gamma':10, 'particle':50,'spambase':57, 'fault':27, 'gas':128,
-'imgseg':18, 'landsat':36, 'letter.rec':16, 'opt.digits':61, 'pageb':10,'shuttle':9,
- 'wave':21,'yeast':8, 'comm.and.crime':101,'abalone':7,'concrete':8,'wine':11, 'yearp':90,
-                    'synthetic':10
-}
+        command = "python mainexperiment.py -i " + args.input.name + " -c " + args.column + \
+                  " -l " + args.label + " -n " + str(n) + " -g " + algo + " -t " + args.type + \
+                  " -o " + args.outputdir
+        os.system(command)
+        return True
+
+
+input_dir = "../group1"
+file_description = {'skin': 3,
+                    'magic.gamma': 10, 'particle': 50, 'spambase': 57, 'fault': 27, 'gas': 128,
+                    'imgseg': 18, 'landsat': 36, 'letter.rec': 16, 'opt.digits': 61, 'pageb': 10, 'shuttle': 9,
+                    'wave': 21, 'yeast': 8, 'comm.and.crime': 101, 'abalone': 7, 'concrete': 8, 'wine': 11, 'yearp': 90,
+                    'synthetic': 10
+                    }
+
+def parallel_local(file_name):
+
+    bench_name = file_name.split("_")[0].split('.csv')[0]
+    flag = int(args.label)
+    column = str(flag + 1) + "-" + str(file_description[bench_name] + flag)
+    full_path = os.path.join(input_dir, file_name)
+    if donot_run_these(bench_name):
+        return 0
+    command = "python mainexperiment.py -i {0:s} -c {1:s} -l {2:s} -n {3:s} -g {4:s} -t {5:s} -o {6:s}".\
+    format(full_path, column, args.label, args.iteration, args.algorithm, args.type, args.outputdir)
+    os.system(command)
+    return 1
+
+def run_parallel():
+
+    all_files = os.listdir(input_dir)
+
+    num_cores = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(num_cores)
+    pool.map(parallel_local, all_files)
+    #result = Parallel(n_jobs=num_cores)(delayed(parallel_local)(file_name) for file_name in all_files)
+def donot_run_these(bench_name):
+    if bench_name in ["particle", "opt.digits", "gas", "yeast", "synthetic",
+                      "yearp"]:# or bench_name=="magic.gamma":
+        return True
+
 
 def submit_benchmark_files():
-    args = main()
+    #args = main()
     flag = int(args.label)
     for file_name in os.listdir(input_dir):
         bench_name = file_name.split("_")[0].split('.csv')[0]
-        column = str(flag+1) + "-" + str(file_description[bench_name] + flag)
-        full_path =  os.path.join(input_dir, file_name)
-	if args.type=="del":
-		command = "qdel {0:s}".format(bench_name)
-		os.system(command)
-		continue
-	
-	command = "qsub -t 1-"+args.iteration+ " -N "+bench_name+" submitscript/submitscript.sh "+ \
-            full_path + " " + column+ " " + str(flag) + " "+ args.type + " " + args.outputdir +" " + \
-        args.algorithm
+        column = str(flag + 1) + "-" + str(file_description[bench_name] + flag)
+        full_path = os.path.join(input_dir, file_name)
 
-        if bench_name=="particle": # or bench_name=="magic.gamma":
+        if args.type == "del":
+            command = "qdel {0:s}_{1:s}".format(args.algorithm, bench_name)
+            os.system(command)
             continue
+        t_name = int(file_name.split("_")[2].split(".csv")[0])
+        command = "qsub -t " + str(t_name) + " -N " + args.algorithm + "_" + bench_name + " submitscript/submitscript.sh " + \
+                  full_path + " " + column + " " + str(flag) + " " + args.type + " " + args.outputdir + " " + \
+                  args.algorithm
+        if donot_run_these(bench_name):
+            continue
+
+        #print command
+
         os.system(command)
+
 if __name__ == '__main__':
-    submit_benchmark_files()
+    args = main()
+    if args.server == "cluster":
+        submit_benchmark_files()
+    elif args.server == "local":
+        run_parallel()
