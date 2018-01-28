@@ -1,3 +1,5 @@
+#import pyximport; pyximport.install()
+#from benchbase import *
 import pandas as pd
 import argparse
 import os
@@ -12,6 +14,7 @@ def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
     # print alpha, num_missing
     test_x = train_x
     miss_index = mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
+
 
     if algorithm.upper() != 'BIFOR':
 
@@ -33,26 +36,38 @@ def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
     replace_with_nan(miss_index, test_x)
     mt_reduced = metric(label, ad_detector.score(test_x, True))  # Bagging approach
     #print mt_reduced
-    return    pd.Series([alpha] + [num_missing /
-                             float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]]
-                        + [algorithm])
+    return    [alpha] + [num_missing /
+                             float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]] \
+                        + [algorithm]
 
 def algo_miss_featuresX(train_x, label, miss_column, algorithm, file_name, label_field=0):
 
-
+    global ad_detector, mvi_object
     # Train the forest
-    global mvi_object
-    global ad_detector
+    result = pd.DataFrame()
     miss_prop = np.arange(0, 1.1, 0.1)
     d = len(miss_column)
     fraction_missing_features = int(np.ceil(d * 0.8)) #int(np.ceil(d / np.sqrt(d)))
     ad_detector = ADDetector(alg_type=algorithm, label=label_field)
     mvi_object = MissingValueInjector()
     ad_detector.train(train_x, ensemble_size=1, file_name=file_name)
+    # for alpha in miss_prop:
+    #     for num_miss in range(1, fraction_missing_features):
+    #         result.append(pd.Series(benchmarks(train_x, label, miss_column, algorithm, alpha, num_miss, mvi_object,
+    #                                            ad_detector)),
+    #                       ignore_index=True)
+
+
+
+
     num_cores = multiprocessing.cpu_count()
-    result= Parallel(n_jobs=num_cores)(delayed(benchmarks,check_pickle=False)(train_x, label, miss_column, algorithm, alpha, num_miss)
-                                            for alpha in miss_prop for num_miss in
-                                            range(1, fraction_missing_features))
+    #pool= multiprocessing.Pool()
+    #result = pool.map()
+    result= Parallel(n_jobs=num_cores)(delayed(benchmarks,check_pickle=False)
+                                       (train_x, label, miss_column, algorithm, alpha, num_miss)
+                                           for alpha in miss_prop for num_miss in
+                                           range(1, fraction_missing_features))
+
     result = pd.DataFrame(result)
     result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
                            2: "auc_mean_impute", 3: "auc_reduced", 4: "auc_MICE_impute", 5: "ensemble_size",

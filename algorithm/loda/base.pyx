@@ -85,9 +85,13 @@ cdef all_hist_pdfs_miss(numpy.ndarray a, list hists, numpy.ndarray w, int n):
 
         w_miss = w[miss_column, :]
         idx_miss = np.where(~ np.any(w_miss, axis=0))[0] #.tolist()
+        #print len(idx_miss), " Number of available projects"
         temp = a.copy()  ## small hack to replace nan with any number because nan*0 doesn't give real number.
         temp[np.isnan(temp)] = -9999999999999.0
         #x = temp.dot(w[:, idx_miss])
+        #print idx_miss, " --available index"
+        if len(idx_miss)<1:
+            print a
         x = np.dot(temp, w[:,idx_miss])
 
         for ix, ihist in enumerate(idx_miss):
@@ -125,5 +129,6 @@ cpdef numpy.ndarray cy_get_all_hist_pdfs_miss(numpy.ndarray a, numpy.ndarray w, 
         #     x = a[i, :].dot(w)
         #     for ihist in range(len(hists)):
         #         hpdfs[i, ihist] = pdf_hist(x[ihist], hists[ihist])
-        hpdfs[i,:] = all_hist_pdfs_miss(a[i,:], hists, w, hist_len)
+        hpdfs[i,:]= all_hist_pdfs_miss(a[i,:], hists, w, hist_len)
+
     return hpdfs

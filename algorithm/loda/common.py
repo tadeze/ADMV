@@ -103,6 +103,9 @@ def histogram_r(x, g1=1., g2=1., g3=-1., verbose=False):
 
     # compute the number of bins based on the formula used by R package
     n = len(x)
+
+    #print np.argwhere(np.isnan(x))
+
     nbinsmax = int(g1 * (n ** g2) * (np.log(n) ** g3))
     if verbose:
         logger.debug("max bins: %d" % (nbinsmax,))
@@ -116,6 +119,7 @@ def histogram_r(x, g1=1., g2=1., g3=-1., verbose=False):
         # counts, breaks = np.histogram(x, bins=(y[0] + (np.arange(0, d+1, dtype=float)/d) * (y[n-1]-y[0])),
         #                              density=False)
         counts, breaks = np.histogram(x, bins=d, density=False)
+        #np.his
         density = counts / (n * (breaks[1] - breaks[0]))
         like = np.zeros(d, dtype=float)
         like2 = np.zeros(d, dtype=float)

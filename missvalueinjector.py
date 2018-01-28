@@ -75,20 +75,25 @@ class MissingValueInjector(object):
 
     def inject_missing_value(self, data, num_missing_attribute, alpha,
                              miss_att_list=[]):
+        """
+
+        :param data: numpy.ndarray nXd data
+        :param num_missing_attribute: Number of missing attribtes from d dimension. <d
+        :param alpha: fraction of data with missing attributes
+        :param miss_att_list: subset of selected features that not be inject a missing value.
+        :return:
+        """
 
         missing_amount = int(np.ceil(data.shape[0] * alpha))
         missing_index = np.random.choice(
             data.shape[0], missing_amount, replace=False)
-        miss_att_list_len = len(miss_att_list)
-        # print miss_att_list
-        # Insert missing value at completley random.
-
 
         for index in missing_index:
             miss_att = np.random.choice(
                 miss_att_list, num_missing_attribute, replace=False)
             if len(miss_att) > 0:
                 data[index, miss_att] = np.nan #MISSING_VALUE
+        #print np.argwhere(np.isnan(data))
         return np.where(np.isnan(data))  #Return index of affected cells.
     def inject_missing_in_random_cell(self, data,  alpha):
 

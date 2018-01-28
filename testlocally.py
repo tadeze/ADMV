@@ -1,22 +1,23 @@
 
 import numpy as np
 from missvalueinjector import MissingValueInjector
-from mainexperiment import algo_miss_features, random_miss_prop, algo_miss_featuresX
+#from mainexperiment import algo_miss_features, random_miss_prop, algo_miss_featuresX
 import algorithm.pyad as pft
 import pandas as pd
 from algorithm.lof import BaggedLOF
 from util.common import metric
 import time
+from splitjobs import single_benchmark
 np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
+    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
     file_name ="yeast_1.csv"
     df = pd.read_csv(file_name)
     train_data = df.ix[:,1:].as_matrix().astype(np.float64)
     #train_lbl = df.ix[:,0] #
     train_lbl =  map(int, df.ix[:, 0] == "anomaly")
-    miss_colmn = range(0,5)
+    miss_colmn = range(0,8)
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
     # start = time.time()
@@ -25,11 +26,26 @@ def test():
     # print result
     #
     # print time.time() - start
+    #algo_list =
     start = time.time()
-    result = algo_miss_featuresX(
-        train_data, train_lbl, miss_colmn, 'loda', file_name)
+    #for algo in ['ifor','bifor','loda']:
+        #print algo
+    #single_benchmark(train_x, label, miss_column, file_name, label_field, algorithm_list=ALGORITHMS, task_id=1):
+    for algo in ["IFOR","BIFOR","LODA"]:
+        result = single_benchmark(train_x=train_data,label=train_lbl, miss_column=miss_colmn,file_name=file_name,
+                              label_field=1,algorithm_list=[algo])
+
     print time.time() - start
-    print result
+    start = time.time()
+    #print result
+    #print result
+    # result = algo_miss_features(
+    #     train_data, train_lbl, miss_colmn, 'egmm', file_name)
+    result = single_benchmark(train_x=train_data, label=train_lbl, miss_column=miss_colmn, file_name=file_name,
+                              label_field=1)
+    print pd.DataFrame(result).head(5)
+    print time.time() - start
+    #print result
 
 def test_loda():
     pass

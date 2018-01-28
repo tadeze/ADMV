@@ -1,6 +1,8 @@
 import numpy as np
 import sklearn.metrics as mt
-tempresult = "/nfs/guille/bugid/adams/ifTadesse/kddexperiment/missingdata/tempresult"
+#tempresult = "/nfs/guille/bugid/adams/ifTadesse/kddexperiment/missingdata/tempresult"
+tempresult = "~/projects/research/kdd2018/tempresult"
+
 ## MISSING VALUE FLAGES
 MISSING_VALUE = -9999.0
 missing_value_per = 0.1
