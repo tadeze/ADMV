@@ -50,7 +50,7 @@ def algo_miss_featuresX(train_x, label, miss_column, algorithm, file_name, label
     mvi_object = MissingValueInjector()
     ad_detector.train(train_x, ensemble_size=1, file_name=file_name)
     num_cores = multiprocessing.cpu_count()
-    result= Parallel(n_jobs=num_cores)(delayed(benchmarks)(train_x, label, miss_column, algorithm, alpha, num_miss)
+    result= Parallel(n_jobs=num_cores)(delayed(benchmarks,check_pickle=False)(train_x, label, miss_column, algorithm, alpha, num_miss)
                                             for alpha in miss_prop for num_miss in
                                             range(1, fraction_missing_features))
     result = pd.DataFrame(result)

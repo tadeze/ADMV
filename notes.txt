@@ -4,6 +4,7 @@
 26s  --- nogil
 25s --- with threaded -- nogil
 24.5 --
+26s
 58.5% for get_bin_hist
 
 

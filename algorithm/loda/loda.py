@@ -1,5 +1,3 @@
-import pyximport; pyximport.install()
-import base as pyx
 
 from common import *
 #NA = np.nan
