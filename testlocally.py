@@ -26,8 +26,8 @@ def test():
     #
     # print time.time() - start
     start = time.time()
-    result = algo_miss_featuresX(
-        train_data, train_lbl, miss_colmn, 'ifor', file_name)
+    result = algo_miss_features(
+        train_data, train_lbl, miss_colmn, 'loda', file_name)
     print time.time() - start
     print result
 

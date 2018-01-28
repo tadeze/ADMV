@@ -1,6 +1,7 @@
+import pyximport; pyximport.install()
+import base as pyx
 
 from common import *
-
 #NA = np.nan
 class ProjectionVectorsHistograms(object):
     def __init__(self, w=None, hists=None):
@@ -151,26 +152,27 @@ class Loda(object):
     def get_all_hist_pdfs_miss(self, a, w, hists):
 
         # x = a.dot(w)
-        hpdfs = np.zeros(shape=(len(a), len(hists)), dtype=float)
-
-        for i in range(0, a.shape[0]):
-            miss_column = self.get_miss_features(a[i,:])
-            #miss_column = np.where(a[i, :] == NA)[0]
-            # search w with this projections
-            if len(miss_column) > 0:
-                w_miss = w[miss_column, :]
-                idx_miss = np.where(~w_miss.any(axis=0))[0].tolist()
-                temp = a[i, :].copy()  ## small hack to replace nan with any number because nan*0 doesn't give real number.
-                temp[np.isnan(temp)] = -9999999999999.0
-                x = temp.dot(w[:, idx_miss])
-
-                for ix, ihist in enumerate(idx_miss):
-                    hpdfs[i, ihist] = pdf_hist(x[ix], hists[ihist])
-            else:
-                x = a[i, :].dot(w)
-                for ihist in range(len(hists)):
-                    hpdfs[i, ihist] = pdf_hist(x[ihist], hists[ihist])
-        return hpdfs
+        # hpdfs = np.zeros(shape=(len(a), len(hists)), dtype=float)
+        #
+        # for i in range(0, a.shape[0]):
+        #     miss_column = self.get_miss_features(a[i,:])
+        #     #miss_column = np.where(a[i, :] == NA)[0]
+        #     # search w with this projections
+        #     if len(miss_column) > 0:
+        #         w_miss = w[miss_column, :]
+        #         idx_miss = np.where(~w_miss.any(axis=0))[0].tolist()
+        #         temp = a[i, :].copy()  ## small hack to replace nan with any number because nan*0 doesn't give real number.
+        #         temp[np.isnan(temp)] = -9999999999999.0
+        #         x = temp.dot(w[:, idx_miss])
+        #
+        #         for ix, ihist in enumerate(idx_miss):
+        #             hpdfs[i, ihist] = pdf_hist(x[ix], hists[ihist])
+        #     else:
+        #         x = a[i, :].dot(w)
+        #         for ihist in range(len(hists)):
+        #             hpdfs[i, ihist] = pdf_hist(x[ihist], hists[ihist])
+        # return hpdfs
+        return cy_get_all_hist_pdfs_miss(a, w, hists)
 
     # Determine k - no. of dimensions
     # sp=1 - 1 / np.sqrt(ncol(a)),

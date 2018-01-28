@@ -1,0 +1,9 @@
+107.617115974 -- raw one
+86.2258319855  -- with cpdef
+30s --- with c codes.
+26s  --- nogil
+25s --- with threaded -- nogil
+24.5 --
+58.5% for get_bin_hist
+
+

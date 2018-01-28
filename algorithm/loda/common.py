@@ -1,3 +1,5 @@
+import pyximport; pyximport.install()
+from base import *
 import numpy as np
 import logging
 logger = logging.getLogger(__name__)
@@ -85,11 +87,11 @@ def sample(x, n):
     np.random.shuffle(shuffle)
     return shuffle[0:n]
 
-class HistogramR(object):
-    def __init__(self, counts, density, breaks):
-        self.counts = counts
-        self.density = density
-        self.breaks = breaks
+# class HistogramR(object):
+#     def __init__(self, counts, density, breaks):
+#         self.counts = counts
+#         self.density = density
+#         self.breaks = breaks
 
 def histogram_r(x, g1=1., g2=1., g3=-1., verbose=False):
     """Construct histograms that mimic behavior of R histogram package
@@ -135,15 +137,16 @@ def histogram_r(x, g1=1., g2=1., g3=-1., verbose=False):
     hist = HistogramR(counts=np.array(counts, float), density=np.array(density, float),
                       breaks=np.array(breaks, dtype=float))
     return hist
-def get_bin_for_equal_hist(breaks, x):
-    if np.isnan(x):
-        return 0
-    if x < breaks[0]:
-        return 0
-    if x > breaks[len(breaks)-1]:
-        return len(breaks)-1
-    i = np.trunc((x - breaks[0]) / (breaks[1] - breaks[0]))  # get integral value
-    return int(i)
+
+# def get_bin_for_equal_hist(breaks, x):
+#     if np.isnan(x):
+#         return 0
+#     if x < breaks[0]:
+#         return 0
+#     if x > breaks[len(breaks)-1]:
+#         return len(breaks)-1
+#     i = np.trunc((x - breaks[0]) / (breaks[1] - breaks[0]))  # get integral value
+#     return int(i)
 
 
 def pdf_hist_equal_bins(x, h, minpdf=1e-8):
@@ -157,29 +160,29 @@ def pdf_hist_equal_bins(x, h, minpdf=1e-8):
     d = np.array([max(v, minpdf) for v in d])
     return d
 
-def pdf_hist(x, h, minpdf=1e-8):
-    if type(x) is np.ndarray:
-        n = len(x)
-        pd = np.zeros(n)
-        for j in range(n):
-            # use simple index lookup in case the histograms are equal width
-            # this returns the lower index
-            i = get_bin_for_equal_hist(h.breaks, x[j])
-            if i >= len(h.density):
-                i = len(h.density)-1  # maybe something else should be done here
-            # i might be 0 if the value does not lie within the
-            # histogram range. We will assume for now that it cannot happen.
-
-            # More accurately, we should also multiply by diff(h$breaks)[i];
-            # however, all breaks are equal in length in this algorithm,
-            # hence, ignoring that for now.
-            # also, hack to make sure that density is not zero
-            pd[j] = max(h.density[i], minpdf)
-    else:
-        i = get_bin_for_equal_hist(h.breaks, x)
-        if i >= len(h.density):
-            i = len(h.density) - 1
-        pd = max(h.density[i], minpdf)
-
-    return pd
+# def pdf_hist(x, h, minpdf=1e-8):
+#     if type(x) is np.ndarray:
+#         n = len(x)
+#         pd = np.zeros(n)
+#         for j in range(n):
+#             # use simple index lookup in case the histograms are equal width
+#             # this returns the lower index
+#             i = get_bin_for_equal_hist(h.breaks, x[j])
+#             if i >= len(h.density):
+#                 i = len(h.density)-1  # maybe something else should be done here
+#             # i might be 0 if the value does not lie within the
+#             # histogram range. We will assume for now that it cannot happen.
+#
+#             # More accurately, we should also multiply by diff(h$breaks)[i];
+#             # however, all breaks are equal in length in this algorithm,
+#             # hence, ignoring that for now.
+#             # also, hack to make sure that density is not zero
+#             pd[j] = max(h.density[i], minpdf)
+#     else:
+#         i = get_bin_for_equal_hist(h.breaks, x)
+#         if i >= len(h.density):
+#             i = len(h.density) - 1
+#         pd = max(h.density[i], minpdf)
+#
+#     return pd
 
