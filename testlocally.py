@@ -11,8 +11,8 @@ from splitjobs import single_benchmark, algo_miss_featuresX
 np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    file_name ="yeast_1.csv"
+    file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
+    #file_name ="yeast_1.csv"
     df = pd.read_csv(file_name)
     train_data = df.ix[:,1:].as_matrix().astype(np.float64)
     #train_lbl = df.ix[:,0] #
@@ -43,7 +43,7 @@ def test():
     # result = algo_miss_featuresX(
     #      train_data, train_lbl, miss_colmn, 'egmm', file_name)
     result = single_benchmark(train_x=train_data, label=train_lbl, miss_column=miss_colmn, file_name=file_name,
-                              label_field=1,algorithm_list=["egmm"])
+                              label_field=0,algorithm_list=["egmm"],task_id=14)
     #TODO: Debug the egmm code.
     print time.time() - start
     print pd.DataFrame(result).head(5)

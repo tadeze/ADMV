@@ -29,11 +29,11 @@ class ADDetector:
                 return ValueError("No correct file name given")
 
             ## Train egmm model
-            self.ad_model = Egmm()
-            self.model_output = os.path.join(tempresult,os.path.basename(file_name)+".mdl")
-            self.score_out = os.path.join(tempresult,os.path.basename(file_name)+".sc")
+            self.ad_model = Egmm("algorithm/egmm")
+            self.model_output = os.path.basename(file_name)+".mdl"
+            self.score_out = os.path.basename(file_name)
             self.ad_model.train(file_name,dims=x_train.shape[1],model_output=self.model_output,
-                                score_out=self.score_out, skip_cols=int(self.label)+1)
+                                score_out=self.score_out+".tr", skip_cols=int(self.label)+1)
             return 0
         else:
             return ValueError("Incorrect algorithm name")
@@ -50,8 +50,8 @@ class ADDetector:
         #if check_miss:
         #x_test[np.isnan(x_test)] = MISSING_VALUE
         if self.alg_type =="EGMM":
-            return self.ad_model.score(x_test,x_test.shape[1],self.model_output,
-                                       os.path.join(tempresult, "marg_"+os.path.basename(self.score_out)))
+            return self.ad_model.score(x_test,x_test.shape[1], self.model_output,
+                                       self.score_out+".sc")
         return self.ad_model.score(x_test, check_miss)
 
 
