@@ -18,11 +18,13 @@ def replace_with_nan(index, df):
 
 
 def algo_parameters(t_id):
+    t_id -=1
     fraction_missing_features = np.arange(0.1,0.9,0.1)  # int(np.ceil(d / np.sqrt(d)))
     miss_prop = np.arange(0, 1.1, 0.1)
     #print miss_prop, fraction_missing_features
     m, f = len(miss_prop), len(fraction_missing_features)
-    if t_id > m*f:
+
+    if t_id >= m*f:
         return ValueError("Value should not be greater than allowed")
     t_miss = t_id % m
     t_frac = t_id / m
@@ -48,7 +50,7 @@ def single_benchmark(train_x, label, miss_column, file_name, label_field, algori
             algorithms[algo] = ADDetector(alg_type=algo, label=label_field)
             algorithms[algo].train(train_x, ensemble_size=1, file_name=file_name)
         except  Exception as e:
-            print "Error from {0:s}, {1:s}".format(algo,e.message)
+            print "Error from {0:s}".format(algo), e.message
             continue
 
     def score_algo(test_x, method, score_bool=False):
@@ -58,9 +60,9 @@ def single_benchmark(train_x, label, miss_column, file_name, label_field, algori
                 if (method in ["mean", "MICE"]) and algo == "BIFOR":
                     continue
                 auc_score = metric(label, algorithms[algo].score(test_x, score_bool))[0]
-                scores.append([frac_missing_prop, frac_features, auc_score, algo, method, file_name])
+                scores.append([frac_missing_prop, frac_features, auc_score, algo, method, os.path.basename(file_name)])
             except Exception as e:
-                print "Error from {0:s}, {1:s}".format(algo, e.message)
+                print "Error from {0:s}".format(algo), e.message
                 continue
 
         return scores
@@ -230,6 +232,7 @@ def main():
         train_lbl = df.ix[:, lbl]
 
     if args.missing is not None:
+        print args.missing
         miss_colmn = map(int, args.missing.split(','))
     else:
         # re-adjust the missing column index.
@@ -249,14 +252,18 @@ def main():
             result = algo_miss_featuresX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
                                          file_name=args.input.name, label_field=args.label)
     else:
+        if args.algorithm is not None:
+            algo_list = args.algorithm.split(',')
+        else:
+            algo_list = ALGORITHMS
         result = single_benchmark(train_x=train_data, label=train_lbl, miss_column=miss_colmn, file_name=args.input.name,
-                                  label_field=args.label, task_id=args.iteration)
+                                  label_field=args.label, task_id=int(args.iteration),algorithm_list=algo_list)
         result = pd.DataFrame(result)
     result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
                            2: "auc", 3: "algorithm", 4: "method", 5: "bench_ame"
                            }, inplace=True)
 
-    dir_name = os.path.join(output_dir, args.algorithm,
+    dir_name = os.path.join(output_dir,
                             os.path.splitext(input_name)[0])
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)

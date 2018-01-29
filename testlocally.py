@@ -7,7 +7,7 @@ import pandas as pd
 from algorithm.lof import BaggedLOF
 from util.common import metric
 import time
-from splitjobs import single_benchmark
+from splitjobs import single_benchmark, algo_miss_featuresX
 np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
@@ -20,31 +20,34 @@ def test():
     miss_colmn = range(0,8)
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
-    # start = time.time()
+    start = time.time()
     # result = algo_miss_features(
     #      train_data, train_lbl, miss_colmn,'egmm',file_name)
     # print result
     #
     # print time.time() - start
     #algo_list =
-    start = time.time()
-    #for algo in ['ifor','bifor','loda']:
-        #print algo
-    #single_benchmark(train_x, label, miss_column, file_name, label_field, algorithm_list=ALGORITHMS, task_id=1):
-    for algo in ["IFOR","BIFOR","LODA"]:
-        result = single_benchmark(train_x=train_data,label=train_lbl, miss_column=miss_colmn,file_name=file_name,
-                              label_field=1,algorithm_list=[algo])
+    # start = time.time()
+    # #for algo in ['ifor','bifor','loda']:
+    #     #print algo
+    # #single_benchmark(train_x, label, miss_column, file_name, label_field, algorithm_list=ALGORITHMS, task_id=1):
+    # for algo in ["IFOR","BIFOR","LODA"]:
+    #     result = single_benchmark(train_x=train_data,label=train_lbl, miss_column=miss_colmn,file_name=file_name,
+    #                           label_field=1,algorithm_list=[algo])
+    #
+    # print time.time() - start
+    # start = time.time()
+    # #print result
+    # #print result
 
-    print time.time() - start
-    start = time.time()
-    #print result
-    #print result
-    # result = algo_miss_features(
-    #     train_data, train_lbl, miss_colmn, 'egmm', file_name)
+    # result = algo_miss_featuresX(
+    #      train_data, train_lbl, miss_colmn, 'egmm', file_name)
     result = single_benchmark(train_x=train_data, label=train_lbl, miss_column=miss_colmn, file_name=file_name,
-                              label_field=1)
-    print pd.DataFrame(result).head(5)
+                              label_field=1,algorithm_list=["egmm"])
+    #TODO: Debug the egmm code.
     print time.time() - start
+    print pd.DataFrame(result).head(5)
+
     #print result
 
 def test_loda():

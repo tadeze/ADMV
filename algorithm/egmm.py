@@ -6,6 +6,8 @@ from util.common import *
 ## - includes, train the model and save it.
 ## - score:
 ## - includes,, load the model & generate score from the model.
+
+
 class Egmm:
     def __init__(self):
         self.gmm_path = "~/adams/kddexperiment/missingdata/algorithm/egmm"

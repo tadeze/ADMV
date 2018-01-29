@@ -91,7 +91,7 @@ cdef all_hist_pdfs_miss(numpy.ndarray a, list hists, numpy.ndarray w, int n):
         #x = temp.dot(w[:, idx_miss])
         #print idx_miss, " --available index"
         if len(idx_miss)<1:
-            print a
+            return hpdfs
         x = np.dot(temp, w[:,idx_miss])
 
         for ix, ihist in enumerate(idx_miss):

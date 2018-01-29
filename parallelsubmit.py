@@ -19,6 +19,8 @@ exp_type="features"
 
 iteration = int(args.iteration)
 algorithm=("loda","ifor", "egmm")
+
+
 def submit_job(n):
 	#for algo in algorithm:
 	algo = args.algorithm
