@@ -11,13 +11,14 @@ from splitjobs import single_benchmark, algo_miss_featuresX
 np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    #file_name ="yeast_1.csv"
+    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
+    file_name ="../group2/skin_benchmark_1287.csv"
+    file_name ="yeast_1.csv"
     df = pd.read_csv(file_name)
     train_data = df.ix[:,1:].as_matrix().astype(np.float64)
     #train_lbl = df.ix[:,0] #
-    train_lbl =  map(int, df.ix[:, 0] == "anomaly")
-    miss_colmn = range(0,8)
+    train_lbl =  map(int, df.ix[:, 5] == "anomaly")
+    miss_colmn = range(0,2)
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
     start = time.time()

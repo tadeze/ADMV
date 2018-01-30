@@ -96,7 +96,7 @@ def run_parallel():
     pool.map(parallel_local, all_files)
     #result = Parallel(n_jobs=num_cores)(delayed(parallel_local)(file_name) for file_name in all_files)
 def donot_run_these(bench_name):
-    if bench_name in ["particle", "opt.digits", "gas", "yeast", "synthetic",
+    if bench_name in ["particle", "gas", "yeast", "synthetic",
                       "yearp"]:# or bench_name=="magic.gamma":
         return True
 

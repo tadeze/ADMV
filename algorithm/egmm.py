@@ -19,7 +19,7 @@ class Egmm:
         os.system(command)
     def score(self, test_x, dims, model_input, score_out):
         num = np.random.randint(0,99999)
-        file_name = os.path.join(tempresult, os.path.basename(model_input).split('.csv')[0]+"_texmp.txt")
+        file_name = os.path.join(tempresult, os.path.basename(model_input).split('.csv')[0]+str(num)+"_texmp.txt")
         #print file_name
         if os.path.exists(file_name):
             os.remove(file_name)
@@ -44,8 +44,8 @@ class Egmm:
 
 if __name__ == '__main__':
     from util.common import metric
-    file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
-    #file_name = "../yeast_1.csv"
+    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
+    file_name = "../yeast_1.csv"
     #file_name ="/nfs/guille/bugid/adams/ifTadesse/kddexperiment/dataset/abalone_benchmark_0709.csv"
     gmm = Egmm("./egmm")
     gmm.train(file_name,7,"yeast.mdl","trainout.csv",skip_cols=6)
