@@ -18,6 +18,8 @@ def main():
     parser.add_argument('-o', '--outputdir', help="Output directory location")
     parser.add_argument('-s','--server', help="Server type. Either `cluter` or `local`")
     parser.add_argument('-b', '--bench', help="Benchmark name")
+    parser.add_argument('-d', '--inputdir', help="Input directory.")
+
     args = parser.parse_args()
     return args
 
@@ -36,12 +38,13 @@ def submit_job(n):
         return True
 
 
-input_dir = "../group2"
+#input_dir = "../group2"
+input_dir = "synthetic"
 file_description = {'skin': 3,
                     'magic.gamma': 10, 'particle': 50, 'spambase': 57, 'fault': 27, 'gas': 128,
                     'imgseg': 18, 'landsat': 36, 'letter.rec': 16, 'opt.digits': 61, 'pageb': 10, 'shuttle': 9,
                     'wave': 21, 'yeast': 8, 'comm.and.crime': 101, 'abalone': 7, 'concrete': 8, 'wine': 11, 'yearp': 90,
-                    'synthetic': 10
+                    'synthetic': 8
                     }
 
 def parallel_local_single_batch(file_name, n):
@@ -96,7 +99,7 @@ def run_parallel():
     pool.map(parallel_local, all_files)
     #result = Parallel(n_jobs=num_cores)(delayed(parallel_local)(file_name) for file_name in all_files)
 def donot_run_these(bench_name):
-    if bench_name in ["particle", "gas", "yeast", "synthetic",
+    if bench_name in ["particle", "gas", "yeast", "opt.digits","comm.and.crime",
                       "yearp"]:# or bench_name=="magic.gamma":
         return True
 
@@ -133,12 +136,13 @@ def split_submit_benchmark_files():
         output_dir = args.outputdir
     if args.algorithm is not None:
         algorithms = args.algorithm
-
+    if args.inputdir is not None:
+        input_dir = args.inputdir
     for file_name in os.listdir(input_dir):
         fsplit = file_name.split("_")
         bench_name = fsplit[0].split('.csv')[0]
         file_id = fsplit[1]
-        print file_id
+       # print file_id
         column = str(flag + 1) + "-" + str(file_description[bench_name] + flag)
         full_path = os.path.join(input_dir, file_name)
 
@@ -146,16 +150,19 @@ def split_submit_benchmark_files():
             command = "qdel {0:s}".format(file_name)
             os.system(command)
             continue
-        t_name = int(file_name.split("_")[2].split(".csv")[0])
-        command = "qsub -N " + bench_name+"_"+str(t_name)+ " -t 1-88 submitscript/splitsubmit.sh " + \
-                  full_path + " " + column + " " + str(flag) + " splitjobs " + output_dir + " " + \
-                  algorithms
-        if donot_run_these(bench_name):
-            continue
+        t_name = 90 #int(file_name.split("_")[2].split(".csv")[0])
+        if bench_name =="spambase":
 
-        #print command
+            command = "qsub -N " + bench_name+"_"+str(t_name)+ " -t 1-99 submitscript/splitsubmit.sh " + \
+                      full_path + " " + column + " " + str(flag) + " splitjobs " + output_dir + " " + \
+                      algorithms
+            if donot_run_these(bench_name):
+                continue
 
-        os.system(command)
+            #print command
+
+            os.system(command)
+            #break
 
 
 

@@ -30,9 +30,11 @@ class ADDetector:
 
             ## Train egmm model
             self.ad_model = Egmm("algorithm/egmm")
+            self.dims = x_train.shape[1]
+
             self.model_output = os.path.basename(file_name)+".mdl"
             self.score_out = os.path.basename(file_name)
-            self.ad_model.train(file_name,dims=x_train.shape[1],model_output=self.model_output,
+            self.ad_model.train(file_name,dims=self.dims,model_output=self.model_output,
                                 score_out=self.score_out+".tr", skip_cols=int(self.label)+1)
             return 0
         else:
@@ -50,8 +52,9 @@ class ADDetector:
         #if check_miss:
         #x_test[np.isnan(x_test)] = MISSING_VALUE
         if self.alg_type =="EGMM":
-            return self.ad_model.score(x_test,x_test.shape[1], self.model_output,
-                                       self.score_out+".sc")
+            num = np.random.randint(0,99999)
+            return self.ad_model.score(x_test,dims=self.dims, model_input=self.model_output,
+                                       score_out=self.score_out+str(num)+".sc")
         return self.ad_model.score(x_test, check_miss)
 
 
@@ -72,6 +75,12 @@ class MissingValueInjector(object):
         else:
             return fi.SimpleFill().complete(df)
 
+    def inject_miss(self, missing_index, num_missing_attribute, data, miss_att_list):
+        for index in missing_index:
+            miss_att = np.random.choice(
+                miss_att_list, num_missing_attribute, replace=False)
+            if len(miss_att) > 0:
+                data[index, miss_att] = np.nan  # MISSING_VALUE
 
     def inject_missing_value(self, data, num_missing_attribute, alpha,
                              miss_att_list=[]):
@@ -85,14 +94,25 @@ class MissingValueInjector(object):
         """
 
         missing_amount = int(np.ceil(data.shape[0] * alpha))
+
+        # Incase of decimal deimension,, ceil or fllow it
+        floor_percent = lambda d: d - np.floor(d)
+        ceil_amount = int(missing_amount*floor_percent(num_missing_attribute)) # on ceil(num_missing_attributes)
+
         missing_index = np.random.choice(
             data.shape[0], missing_amount, replace=False)
+        np.random.shuffle(missing_index)
 
-        for index in missing_index:
-            miss_att = np.random.choice(
-                miss_att_list, num_missing_attribute, replace=False)
-            if len(miss_att) > 0:
-                data[index, miss_att] = np.nan #MISSING_VALUE
+        self.inject_miss(missing_index[:ceil_amount], int(np.ceil(num_missing_attribute)), data, miss_att_list)
+        self.inject_miss(missing_index[ceil_amount:], int(np.floor(num_missing_attribute)), data, miss_att_list)
+
+        #
+        # for index in missing_index[:ceil_amount]:
+        #     miss_att = np.random.choice(
+        #         miss_att_list, num_missing_attribute, replace=False)
+        #     if len(miss_att) > 0:
+        #         data[index, miss_att] = np.nan #MISSING_VALUE
+        #
         #print np.argwhere(np.isnan(data))
         return np.where(np.isnan(data))  #Return index of affected cells.
     def inject_missing_in_random_cell(self, data,  alpha):

@@ -12,13 +12,13 @@ plot_miss_value<-function(ld, iff,bifor,miss_ff=0.33, tt){
   ylimt = c(min(min(ifor_filtered$mean_impute) ,min(loda_filtered$reduce),min(bifor_filtered$reduce),min(loda_filtered$mean_impute))- 0.01,
             max(max(ifor_filtered$reduce),max(loda_filtered$reduce),max(ifor_filtered$MICE_impute))+0.01)
   
-  plot(ifor_filtered$miss_prop,ifor_filtered$mean_impute ,type='l',xlab='Proportion of missing instance',ylab="auc",ylim=ylimt,main=tt)
+  plot(ifor_filtered$miss_prop,ifor_filtered$mean_impute ,type='l',xlab='Proportion of instances with missing features',ylab="auc",ylim=ylimt,main=tt)
   arrows(ifor_filtered$miss_prop,ifor_filtered$mean_impute  - ifor_filtered$mean_impute_ci,
          ifor_filtered$miss_prop,ifor_filtered$mean_impute  + ifor_filtered$mean_impute_ci,code=3,length=0.02,angle=90,col="black")
   lines(ifor_filtered$miss_prop,ifor_filtered$reduce,type='l',col='magenta')
   lines(ifor_filtered$miss_prop,ifor_filtered$reduce,type='p',col='magenta',pch=15)
   arrows(ifor_filtered$miss_prop,ifor_filtered$reduce - ifor_filtered$reduce_ci,
-         ifor_filtered$miss_prop,ifor_filtered$reduce + ifor_filtered$reduce_ci,code=3,length=0.02,angle=90,col='red')
+         ifor_filtered$miss_prop,ifor_filtered$reduce + ifor_filtered$reduce_ci,code=3,length=0.02,angle=90,col='magenta')
   
   #lines(ifor_filtered$miss_prop,ifor_filtered$M,type='l',col='red')
   lines(ifor_filtered$miss_prop,ifor_filtered$MICE_impute,type='l',col='orange',pch=16,lty=1)
@@ -36,16 +36,16 @@ plot_miss_value<-function(ld, iff,bifor,miss_ff=0.33, tt){
   lines(loda_filtered$miss_prop,loda_filtered$mean_impute ,type='l',col="blue", lty=3,pch=2)
   lines(loda_filtered$miss_prop,loda_filtered$mean_impute ,type='p',col="blue", lty=3,pch=2)
   arrows(loda_filtered$miss_prop,loda_filtered$mean_impute  - loda_filtered$mean_impute_ci,
-         loda_filtered$miss_prop,loda_filtered$mean_impute  + loda_filtered$mean_impute_ci,code=3,length=0.02,angle=90,col="black")
-  lines(loda_filtered$miss_prop,loda_filtered$reduce,type='l',col='green',lty=3,pch=3)
+         loda_filtered$miss_prop,loda_filtered$mean_impute  + loda_filtered$mean_impute_ci,code=3,length=0.02,angle=90,col="blue")
+  lines(loda_filtered$miss_prop,loda_filtered$reduce,type='l',col='cyan',lty=3,pch=3)
   lines(loda_filtered$miss_prop,loda_filtered$reduce,type='p',col='cyan',lty=3,pch=3)
   #lines(ifor_filtered$miss_prop,ifor_filtered$MICE_impute,type='l',col='red')
   arrows(loda_filtered$miss_prop,loda_filtered$reduce - loda_filtered$reduce_ci,
-         loda_filtered$miss_prop,loda_filtered$reduce + loda_filtered$reduce_ci,code=3,length=0.02,angle=90,col='green')
+         loda_filtered$miss_prop,loda_filtered$reduce + loda_filtered$reduce_ci,code=3,length=0.02,angle=90,col='cyan')
   lines(loda_filtered$miss_prop,loda_filtered$MICE_impute,type='l',col='red',lty=3,pch=4)
   lines(loda_filtered$miss_prop,loda_filtered$MICE_impute,type='p',col='red',lty=3,pch=4)
   arrows(loda_filtered$miss_prop,loda_filtered$MICE_impute - loda_filtered$MICE_impute_ci,
-         loda_filtered$miss_prop,loda_filtered$MICE_impute + loda_filtered$MICE_impute_ci,code=3,length=0.02,angle=90,col='orange')
+         loda_filtered$miss_prop,loda_filtered$MICE_impute + loda_filtered$MICE_impute_ci,code=3,length=0.02,angle=90,col='red')
   
   
   legend("bottomleft",col=c('black','magenta','orange','green','blue','cyan','red'),
@@ -95,7 +95,7 @@ gt <- list()
 
 algorithm = c("ifor", "loda", "bifor","egmm")
 #par(mfrow=c(2,2))
-pdf("lineplot.pdf")
+pdf("lineplot2.pdf")
 
 for (dataset in datasets) {
   
@@ -119,7 +119,7 @@ for (dataset in datasets) {
   }
   plot_miss_value(loda,ifor,bifor,miss_ff,dataset)
 }
-
+dev.off()
 #loda<-read.csv(paste0(mainpath,'summary/loda_',dataset,'.preproc.csv_summary.csv'))
 #bifor<-read.csv(paste0(mainpath,'summary/bifor_',dataset,'.preproc.csv_summary.csv'))
 
@@ -163,10 +163,13 @@ gather_result <- function(df, file_name){
 
 ## Plot operation 
 library(ggplot2)
-all_filtered <- all[-which(all$algorithm %in% c("bifor_mean_impute","bifor_MICE_impute")),]
+# Remove some algorithms
+all_filtered <- all[-which(all$algorithm %in% c("bifor_mean_impute","bifor_MICE_impute", "egmm_mean_impute","egmm_bagg","egmm_MICE_impute")),]
+
+legend_title="Algorithms"
+colrs = c("#999999", "#E6AF00","#56B4E9","#EF0212","#341211","#00EEFF","#12F500", "#FF00EE", "#CC3CEE","#EA0101")
 gp <- list()
 i=1
-colrs = c("#999999", "#E6AF00","#56B4E9","#EF0212","#341211","#00EEFF","#12F500", "#FF00EE", "#CC3CEE","#EA0101")
 for(missprop in unique(all_filtered$miss_prop)){
   for(indx in unique(all_filtered$indx)){
   gp[[i]]=ggplot(all_filtered[all_filtered$miss_prop==missprop & all_filtered$indx==indx,], 
@@ -174,17 +177,104 @@ for(missprop in unique(all_filtered$miss_prop)){
   geom_bar(stat="identity",position=position_dodge()) + 
   geom_errorbar(aes(ymin=auc-ci, ymax=auc+ci), width=.2, position=position_dodge(.9)) + 
   ggtitle(paste0("Missing proportion of ",missprop," Index of ", indx)) + 
-    scale_fill_manual(values=colrs)
+    scale_fill_manual( legend_title, values=colrs) + 
+    #labs(fill="Algorithms")+
     theme_bw()
   #print(missprop)
   i = i+1
   }
 }
-pdf("All_graphs_disp.pdf",width=13, height=6)
+pdf("All_graphs_disp_noegmm.pdf",width=13, height=6)
 
 for(i in seq(length(gp))){
 grid.arrange(gp[[i]])
 }
 dev.off()
 ## Plot along the bars
-write.table(all,"benchmark_result_aggregated.csv",sep=",", row.names = F, quote=F)
+write.table(all_filtered,"benchmark_result_filtered.csv",sep=",", row.names = F, quote=F)
+
+
+
+
+
+
+
+
+########### Experiments on the set of benchmark files ########## 
+file_name_path <- '../../kddexperiment/missingdata/group2Result/benchmark_frac_fixed_raw.csv'
+benchall <- read.csv(file_name_path,stringsAsFactors = F, header=F)
+
+names(benchall) <- names(read.csv('../../kddexperiment/missingdata/benchmark1/abalone_benchmark_0343/splitjobs_results_iter_11abalone_benchmark_0343.csv'))
+benchall$benchmark <- sapply(benchall$bench_am,function(x){strsplit(x,"_")[[1]][1]})
+benchall$bench_id <-sapply(benchall$bench_am, function(x){strsplit(strsplit(x,"_")[[1]][3],".csv")[[1]][1]})
+
+benchdf = benchall
+benchdf$algorithm = tolower(benchdf$algorithm)
+benchdf$method = tolower(benchdf$method)
+write.table(benchdf, "../../kddexperiment/missingdata/group2Result/synthetic_result_fraction.csv", row.names = F, quote = F)
+
+
+
+
+#################### Groupby the short-file forma ############
+metadata <-read.csv('../../kddexperiment/missingdata/group2Result/metadata.csv',header=T)
+
+
+
+benchdf <- read.csv('../../kddexperiment/missingdata/group2Result/benchmark_summary_with_frac.csv',stringsAsFactors = FALSE)
+
+bench_summary = benchdf %>% group_by(miss_prop, miss_features_prop, algorithm, method, benchmark) %>% 
+  summarise(aauc = mean(auc), ci=util.ciZ(auc), len = length(auc)) %>% filter(len>6) #(miss_prop==0) & (miss_features_prop==0))
+#Rename variables
+bench_summary$method[bench_summary$algorithm=="ifor" & bench_summary$method=="reduced"]= "prop.dist" 
+bench_summary$algorithm[bench_summary$algorithm=="bifor" & bench_summary$method=="reduced"]= "ifor" 
+names(bench_summary)[c(5,6,8)] = c("benchmark","auc","count")
+
+
+write.table(bsx, "../../kddexperiment/missingdata/group2Result/benchmark_summary_filt_frac.csv", row.names = F, quote = F,sep=",")
+all_missing = bsx %>% filter(miss_prop==1)# %>% filter((algorithm %in% c("ifor","loda")) | (method =="reduced"))
+write.table(all_missing, "../../kddexperiment/missingdata/group2Result/all_miss_summary_frac.csv", row.names = F, quote = F,sep=",")
+
+
+groupby_shortformat<-function(datax, outputdir="summary/"){
+  ds = read.csv(datax,header=F)
+  dx = ds %>% group_by(miss_prop, miss_feature_prop) %>% 
+    summarise(mean_impute = mean(auc_mean_impute), mean_impute_ci=util.ciZ(auc_mean_impute),
+              reduce = mean(auc_reduced),reduce_ci = util.ciZ(auc_reduced),
+              MICE_impute=mean(auc_MICE_impute), MICE_impute_ci = util.ciZ(auc_MICE_impute),
+              #mean_ap_miss = mean(ap_cm),mean_ap_miss_ci = util.ciZ(ap_cm),
+              len = length(auc_mean_impute))
+  dir_path <- dirname(datax)
+  dir.create(paste0(dir_path,"/",outputdir),showWarnings = F)
+  write.table(dx,paste0(dir_path,"/",outputdir,"/",basename(datax),"_summary.csv"), sep=",", row.names = F, quote=F)
+  #print(paste0(dir_path,outputdir,basename(datax),"_summary.csv"))
+  return(dx)
+}
+
+gpp <- list()
+pd <- position_dodge(0.05)
+for(bench in unique(all_missing$benchmark)){
+  dimension = as.numeric(metadata$dim[metadata$name==bench])
+  title = paste0(bench,"-- dimension: ",dimension)
+  gpp[[bench]] = ggplot(data=all_missing[all_missing$benchmark==bench,],aes(x=miss_features_prop, y=auc, shape=algorithm, color=method, 
+                                                           group=interaction(algorithm,method))) +
+   geom_errorbar(aes(ymin=auc-ci, ymax=auc+ci), width=.1, position=pd) +
+   geom_line(position=pd) +
+    geom_point(position=pd) +
+    ylab('auc') + xlab('missing features proportion')  + 
+    theme_light() +
+   ggtitle(title)+
+  scale_shape_manual(values=c(16,8))
+}
+
+pdf('learning-line-ci-0.pdf',width=11)
+for(bench in unique(all_missing$benchmark)){
+  grid.arrange(gpp[[bench]])
+}
+dev.off()
+pdf('learning-line-cix.pdf',width=11)
+grid.arrange(grobs=gpp,ncol=4,nrow=4)
+dev.off()
+
+
+

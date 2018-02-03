@@ -7,18 +7,19 @@ import pandas as pd
 from algorithm.lof import BaggedLOF
 from util.common import metric
 import time
+from algorithm.egmm import Egmm
 from splitjobs import single_benchmark, algo_miss_featuresX
 np.random.seed(100)
 def test():
     #file_name = "/nfs/guille/bugid/adams/ifTadesse/missingdata/experiments/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
     #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/shuttle_1v23567/fullsamples/shuttle_1v23567_1.csv"
-    file_name ="../group2/skin_benchmark_1287.csv"
-    file_name ="yeast_1.csv"
+    file_name ="../group2/wave_benchmark_1562.csv"
+    #file_name ="yeast_1.csv"
     df = pd.read_csv(file_name)
-    train_data = df.ix[:,1:].as_matrix().astype(np.float64)
+    train_data = df.ix[:,6:].as_matrix().astype(np.float64)
     #train_lbl = df.ix[:,0] #
     train_lbl =  map(int, df.ix[:, 5] == "anomaly")
-    miss_colmn = range(0,2)
+    miss_colmn = range(0,6)
     #result = algo_miss_features(
      #    train_data, train_lbl, miss_colmn,'LODA')
     start = time.time()
@@ -50,6 +51,25 @@ def test():
     print pd.DataFrame(result).head(5)
 
     #print result
+
+
+def test_eggm():
+    file_name ="../group2/abalone_benchmark_1066.csv"
+    gmm = Egmm()
+    gmm.train(file_name,7,"aba.mdl","trainout.csv",skip_cols=6)
+
+    score = gmm.score_file(file_name,7,"aba.mdl", "score_out.csv", skip_cols=6)
+    df = pd.read_csv(file_name)
+    #print df.head(5)
+    ss = pd.read_csv("tempresult/trainout.csv")
+    ss["logscore"] = -1*np.log(-1*ss["score"])
+    ss = ss.sort_values("id")
+    ss.to_csv("tempresult/trainout-order.csv")
+    train_lbl = map(int, df.ix[:, 5] == "anomaly")
+    print train_lbl
+    print metric(train_lbl, score)
+    print metric(train_lbl, ss["logscore"].as_matrix())
+
 
 def test_loda():
     pass
@@ -84,7 +104,8 @@ def test_cell_injector():
 
     #print pft.__file__
 if __name__ == '__main__':
-    test()
+    #test()
+    test_eggm()
     #dd = 'concrete'
     #check_metric('/nfs/guille/bugid/adams/meta_analysis/mothersets/regression/'+dd+'/'+dd+'.preproc.csv')
     #test_cell_injector()

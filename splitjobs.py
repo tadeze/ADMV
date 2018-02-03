@@ -20,7 +20,7 @@ def replace_with_nan(index, df):
 
 def algo_parameters(t_id):
     t_id -=1
-    fraction_missing_features = np.arange(0.1,0.9,0.1)  # int(np.ceil(d / np.sqrt(d)))
+    fraction_missing_features = np.arange(0,0.9,0.1)  # int(np.ceil(d / np.sqrt(d)))
     miss_prop = np.arange(0, 1.1, 0.1)
     #print miss_prop, fraction_missing_features
     m, f = len(miss_prop), len(fraction_missing_features)
