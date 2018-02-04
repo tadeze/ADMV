@@ -151,21 +151,46 @@ def split_submit_benchmark_files():
             os.system(command)
             continue
         t_name = 90 #int(file_name.split("_")[2].split(".csv")[0])
-        if bench_name =="spambase":
+        #if bench_name =="spambase":
 
-            command = "qsub -N " + bench_name+"_"+str(t_name)+ " -t 1-99 submitscript/splitsubmit.sh " + \
-                      full_path + " " + column + " " + str(flag) + " splitjobs " + output_dir + " " + \
-                      algorithms
-            if donot_run_these(bench_name):
-                continue
+        command = "qsub -N " + bench_name+"_"+str(t_name)+ " -t 1-99 submitscript/splitsubmit.sh " + \
+                  full_path + " " + column + " " + str(flag) + " splitjobs " + output_dir + " " + \
+                  algorithms
+        if donot_run_these(bench_name):
+            continue
 
             #print command
 
-            os.system(command)
+        os.system(command)
             #break
+from pandas import DataFrame,read_csv, Series
+from totalcorrelation import total_correlation
+import numpy as np
+def total_information():
+    flag = int(args.label)
+    total_corr = DataFrame()
+    if args.outputdir is not None:
+        output_dir = args.outputdir
+    if args.inputdir is not None:
+        input_dir = args.inputdir
+    for file_name in os.listdir(input_dir):
+        fsplit = file_name.split("_")
+        bench_name = fsplit[0].split('.csv')[0]
+        file_id = fsplit[1]
+        # print file_id
+        column = str(flag + 1) + "-" + str(file_description[bench_name] + flag)
+        full_path = os.path.join(input_dir, file_name)
+        if donot_run_these(bench_name):
+            continue
 
-
-
+        if args.type == "totalcorrelation":
+            df = read_csv(full_path)
+            train_x = df[df['ground.truth']=="nominal"].ix[:,(flag+1):(flag+file_description[bench_name])]
+            train_x = train_x.as_matrix().astype(np.float64)
+            current_total_corr = Series([bench_name, file_name, total_correlation(train_x)])
+            total_corr = total_corr.append(current_total_corr,ignore_index=True)
+    total_corr.rename(columns={0:'benchmark',1:'filename',2:'totalcorrelation'},inplace=True)
+    total_corr.to_csv("total_correlation.csv",na_rep=np.nan)
 
 if __name__ == '__main__':
     args = main()
@@ -175,5 +200,7 @@ if __name__ == '__main__':
             run_split_paralell()
     elif args.server =="split":
         split_submit_benchmark_files()
+    elif args.server == "entropy":
+        total_information()
     else:
         ValueError("Invalid experiment type")

@@ -1,7 +1,7 @@
 import os
 from pandas import read_csv
 from util.common import *
-
+#tempresult ="egmm_model"
 class Egmm:
     def __init__(self, egmm_path="~/adams/kddexperiment/missingdata/algorithm/egmm"):
         self.gmm_path =  egmm_path
@@ -45,11 +45,11 @@ class Egmm:
 if __name__ == '__main__':
     from util.common import metric
     #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
-    file_name = "../yeast_1.csv"
+    file_name = "../mixturesynthetic/synthetic_mixture_d_8_delta_-6_6_rho_0.4iter_3.csv"
     #file_name ="/nfs/guille/bugid/adams/ifTadesse/kddexperiment/dataset/abalone_benchmark_0709.csv"
     gmm = Egmm("./egmm")
-    gmm.train(file_name,7,"yeast.mdl","trainout.csv",skip_cols=6)
-    score = gmm.score_file(file_name,7,"yeast.mdl", "score_out.csv", skip_cols=6)
+    gmm.train(file_name,8,"syeast.mdl","trainout.csv",skip_cols=1)
+    score = gmm.score_file(file_name,8,"syeast.mdl", "score_out.csv", skip_cols=1)
     df = read_csv(file_name)
     print df.head(5)
     train_lbl = map(int, df.ix[:, 0] == "anomaly")

@@ -54,11 +54,11 @@ def test():
 
 
 def test_eggm():
-    file_name ="../group2/abalone_benchmark_1066.csv"
+    file_name ="mixturesynthetic/synthetic_mixture_d_8_delta_1_1_rho_1.6iter_5.csv"
     gmm = Egmm()
-    gmm.train(file_name,7,"aba.mdl","trainout.csv",skip_cols=6)
+    gmm.train(file_name,7,"aba.mdl","trainout.csv",skip_cols=1)
 
-    score = gmm.score_file(file_name,7,"aba.mdl", "score_out.csv", skip_cols=6)
+    score = gmm.score_file(file_name,7,"aba.mdl", "score_out.csv", skip_cols=1)
     df = pd.read_csv(file_name)
     #print df.head(5)
     ss = pd.read_csv("tempresult/trainout.csv")
