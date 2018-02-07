@@ -81,3 +81,53 @@ for (n in 1:5) {
 }
 
 ## Mixture data test 
+pp <- list()
+mixture.data <-
+  function(d=8, N=3000, anom.prop=0.1, r=0.4,n){
+    
+    #d=8
+    #r= 0.8
+    an= ceiling(N*anom.prop) #300
+    
+    mu_mt = matrix(rep(c(-3, 0, 3), d), ncol = d, nrow = 3)
+    sig_mt = list(diag(d) + r - diag(r, d),
+                  diag(d) + r - diag(r, d),
+                  diag(d) + r - diag(r, d))
+    w = c(1, 1, 1) / 3
+    gmm = data.frame(class = "nominal",
+                     rmixn(
+                       N-an,
+                       mu = mu_mt,
+                       sigma = sig_mt,
+                       w = w,
+                       isChol = T
+                     ))
+    mus = sample(c(-2,4,5,-5,-6,1,-1,0,6),2,F)
+    mu_anom = rep(mus, 4)
+    anom <-
+      data.frame(class = "anomaly", rmvn(
+        n = an,
+        mu = mu_anom , #rep(c(-2,3),4),#rep(mu, d),
+        sigma = diag(d) + r - diag(r, d),
+        isChol = T
+      ))
+    mixture_df = rbind(gmm, anom)
+    #pp[[n]] <- ggplot(mixture_df,aes(X1, X2, color=class)) +   geom_density2d() + theme_bw() + geom_point()
+    mixuture_data = paste0(datapath,
+                           "synthetic_mixture_d_8_delta_",
+                            mu_anom[1],"_",mu_anom[2],
+                           
+                           "_rho_",
+                           r,
+                           "iter_",
+                           n,
+                           ".csv")
+    util.writecsv(mixture_df, mixuture_data)
+  }
+for (n in 1:5) {
+  for (r in c(0.4, 0.8, 1.2, 1.6)) {
+    mixture.data(r=r,n=n)
+  }
+}
+
+

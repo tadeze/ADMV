@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 import multiprocessing
 import logging
 logging.basicConfig(level=logging.DEBUG, filename="test.log")
-ALGORITHMS = ["IFOR", "BIFOR", "LODA"]
+ALGORITHMS = ["IFOR", "BIFOR", "LODA","EGMM"]
 
 
 def replace_with_nan(index, df):

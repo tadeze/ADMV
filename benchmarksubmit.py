@@ -17,7 +17,7 @@ def main():
     parser.add_argument('-t', '--type', help="Experiment type.")
     parser.add_argument('-o', '--outputdir', help="Output directory location")
     parser.add_argument('-s','--server', help="Server type. Either `cluter` or `local`")
-    parser.add_argument('-b', '--bench', help="Benchmark name")
+    parser.add_argument('-b', '--bench', help="Benchmark nam")
     parser.add_argument('-d', '--inputdir', help="Input directory.")
 
     args = parser.parse_args()
@@ -158,10 +158,13 @@ def split_submit_benchmark_files():
                   algorithms
         if donot_run_these(bench_name):
             continue
-
+        if args.bench is not None:
+            if bench_name == args.bench:
+                os.system(command)
+        else:
             #print command
-
-        os.system(command)
+            if bench_name in ["fault","pageb","spambase"]:
+                os.system(command)
             #break
 from pandas import DataFrame,read_csv, Series
 from totalcorrelation import total_correlation
@@ -185,7 +188,8 @@ def total_information():
 
         if args.type == "totalcorrelation":
             df = read_csv(full_path)
-            train_x = df[df['ground.truth']=="nominal"].ix[:,(flag+1):(flag+file_description[bench_name])]
+            
+	    train_x = df[df['class']=="nominal"].ix[:,(flag+1):(flag+file_description[bench_name])]
             train_x = train_x.as_matrix().astype(np.float64)
             current_total_corr = Series([bench_name, file_name, total_correlation(train_x)])
             total_corr = total_corr.append(current_total_corr,ignore_index=True)

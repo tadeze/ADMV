@@ -33,18 +33,22 @@ gmm = data.frame(class = "nominal",
                    w = w,
                    isChol = F
                  ))
-mu=-2
-
+mu= 0
+#CC =c(c(0,0),c(0,-2),c(0,-6),c(1,1),c(-1,-2),c(1,-2))
 nom <-
   data.frame(class = "anomaly", rmvn(
     n = An,
-    mu = rep(mu, d),
-    sigma = 2*diag(d) + r - 2*diag(r, d),
+    mu = rep(c(-1,-2),1),#rep(mu, d),
+    sigma = diag(d) + r - diag(r, d),
     isChol = T
   ))
 
-gmm = rbind(gmm, nom)
+gmmx = rbind(gmm, nom)
+#@png("2dmixture-with-anom-1d.png")
+ggplot(gmmx,aes(X1, X2, color=class)) +   geom_density2d() + theme_bw() + geom_point()
+ff = IsolationVolumeForest::IsolationTrees(gmmx[,-1])
+sc = IsolationVolumeForest::AnomalyScore(gmmx[,-1],ff)
+pROC::roc(gmmx[,1],sc$outF)
+ggplot(gmmx,aes(X2, X1)) +   geom_density2d() + theme_bw() + geom_point() +
+  geom_point(aes(X2,X1,color=class))
 
-png("2dmixture-with-anom-1d.png")
-ggplot(gmm, mapping = aes(X1, X2, color=class)) + 
-  geom_density2d() + theme_bw()
