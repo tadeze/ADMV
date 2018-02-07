@@ -30,7 +30,7 @@ if __name__ == '__main__':
     cvv = np.cov(w.T)
     print cvv
     #print np.var(w,axis=0)
-    np.linalg.det(cvv)
+    np.linalg.det(cvv
     varss = np.var(w, axis=0)
     print varss[0], np.sum([entropy(np.reshape(vv,[1,1])) for vv in varss] )#print entropy(cvv))
     #print
