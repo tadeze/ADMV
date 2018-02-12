@@ -1,3 +1,5 @@
+#import pyximport; pyximport.install()
+#from benchbase import *
 import pandas as pd
 import argparse
 import os
@@ -7,78 +9,130 @@ from joblib import Parallel, delayed
 
 from util.common import *
 from missvalueinjector import ADDetector, MissingValueInjector
+from joblib import Parallel, delayed
+import multiprocessing
 
-## Set of experiments
+def replace_with_nan(index, df):
+    df[index] = np.nan
+def benchmarks(train_x, label, miss_column, algorithm, alpha, num_missing):
+    # print alpha, num_missing
+    test_x = train_x
+    miss_index = mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
 
 
+    if algorithm.upper() != 'BIFOR':
 
-
-def squareIt(nn, i, j):
-    return [nn, i, j, i ** 2 + j ** 2]
-
-
-def miss_feature_experiment(train_x, mvi_object, miss_column,
-                            ad_detector, label, alpha, num_missing):
-    test_x = train_x.copy()
-    mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
-    # Check with missing values.
-    if num_missing * alpha > 0:
-        # Check the value.
-        ms_score = ad_detector.score(mvi_object.impute_value(test_x.copy(), "SimpleFill"), False)
-        mt = metric(label, ms_score)
-        mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(), method="MICE"),
-                                                    False))  # impute
+        # Check with missing values.
+        if num_missing * alpha > 0:
+            # Check the value.
+            ms_score = ad_detector.score(mvi_object.impute_value(test_x, "SimpleFill"), False)
+            mt = metric(label, ms_score)
+            replace_with_nan(miss_index, test_x)
+            mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x, method="MICE"),
+                                                        False))  # impute
+        else:
+            replace_with_nan(miss_index, test_x)
+            ms_score = ad_detector.score(test_x, False)
+            mt = metric(label, ms_score)
+            mt_impute = mt
     else:
-        ms_score = ad_detector.score(test_x, False)
-        mt = metric(label, ms_score)
-        mt_impute = mt
+        mt = mt_impute = [0.0, 0.0]  # Just to reduce computation, only run reduced approach when BIFOR is used.
+    replace_with_nan(miss_index, test_x)
     mt_reduced = metric(label, ad_detector.score(test_x, True))  # Bagging approach
-    return [alpha] + [num_missing /
-               float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]] #+ [algorithm]
+    #print mt_reduced
+    return    [alpha] + [num_missing /
+                             float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] + [mt_impute[0]] \
+                        + [algorithm]
+
+def algo_miss_featuresX(train_x, label, miss_column, algorithm, file_name, label_field=0):
+
+    global ad_detector, mvi_object
+    # Train the forest
+    result = pd.DataFrame()
+    miss_prop = np.arange(0, 1.1, 0.1)
+    d = len(miss_column)
+    fraction_missing_features = int(np.ceil(d * 0.8)) #int(np.ceil(d / np.sqrt(d)))
+    ad_detector = ADDetector(alg_type=algorithm, label=label_field)
+    mvi_object = MissingValueInjector()
+    ad_detector.train(train_x, ensemble_size=1, file_name=file_name)
+    # for alpha in miss_prop:
+    #     for num_miss in range(1, fraction_missing_features):
+    #         result.append(pd.Series(benchmarks(train_x, label, miss_column, algorithm, alpha, num_miss, mvi_object,
+    #                                            ad_detector)),
+    #                       ignore_index=True)
 
 
 
 
-def algo_miss_features(train_x, label, miss_column, algorithm):
+    num_cores = multiprocessing.cpu_count()
+    #pool= multiprocessing.Pool()
+    #result = pool.map()
+    result= Parallel(n_jobs=num_cores)(delayed(benchmarks,check_pickle=False)
+                                       (train_x, label, miss_column, algorithm, alpha, num_miss)
+                                           for alpha in miss_prop for num_miss in
+                                           range(1, fraction_missing_features))
+
+    result = pd.DataFrame(result)
+    result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
+                           2: "auc_mean_impute", 3: "auc_reduced", 4: "auc_MICE_impute", 5: "ensemble_size",
+                           6: "algorithm"}, inplace=True)
+
+    return result
+
+
+
+
+
+
+
+
+def algo_miss_features(train_x, label, miss_column, algorithm,  file_name, label_field=0):
          # Train the forest
     ensemble_size = 2  # run upto 4 times
     result = pd.DataFrame()
-    miss_prop = np.arange(0, 0.35, 0.05)
-    fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
-    ad_detector = ADDetector(alg_type=algorithm)
+    miss_prop = np.arange(0, 1.1, 0.1)
+    d = len(miss_column)
+    fraction_missing_features = int(np.ceil(len(miss_column) * 0.8)) # int(np.ceil(d /np.sqrt(d)))
+    ad_detector = ADDetector(alg_type=algorithm, label=label_field)
     mvi_object = MissingValueInjector()
 
-    ad_detector.train(train_x, ensemble_size=ensemble_size)
-    num_cores = multiprocessing.cpu_count()
-    # exp_result = Parallel(n_jobs=num_cores)(delayed(miss_feature_experiment)
-    #                                         (train_x=train_x, mvi_object=mvi_object, miss_column=miss_column,
-    #                                          ad_detector=ad_detector, label=label, alpha=_alpha, num_missing= miss_p)
-    #                                         for miss_p in miss_prop for _alpha in range(1,fraction_missing_features))
-    #
+    for en_size in range(1, ensemble_size):
 
-    exp_result = Parallel(n_jobs=num_cores)(delayed(squareIt)(ad_detector, i, j) for i ,j in zip(range(10),range(8)))
-
-    #for en_size in range(1, ensemble_size):
-        #for alpha in miss_prop:   ## Need to parallel this and
-         #   for num_missing in range(1, fraction_missing_features):
+        ad_detector.train(train_x, ensemble_size=en_size, file_name=file_name)
+        for alpha in miss_prop:
+            for num_missing in range(1, fraction_missing_features):
 
                 #print alpha, num_missing
+                test_x = train_x.copy()
+                mvi_object.inject_missing_value(test_x, num_missing, alpha, miss_column)
+                if algorithm.upper()!='BIFOR':
 
-    #result = result.append(pd.Series(exp_result), ignore_index=True)
-    result = pd.DataFrame(exp_result)
-    print result
-    # result = result.append(
-    #     pd.Series([alpha] + [num_missing /
-    #                                     float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] +[mt_impute[0]]
-    #               +[en_size] + [algorithm]),
-    #     ignore_index=True)
+                    # Check with missing values.
+                    if num_missing*alpha>0:
+                        # Check the value.
+                        ms_score = ad_detector.score(mvi_object.impute_value(test_x.copy(), "SimpleFill"), False)
+                        mt = metric(label, ms_score)
+                        mt_impute = metric(label, ad_detector.score(mvi_object.impute_value(test_x.copy(),method="MICE"),False)) #impute
+                    else:
+                        ms_score = ad_detector.score(test_x, False)
+                        mt = metric(label, ms_score)
+                        mt_impute = mt
+                else:
+                    mt=mt_impute = [0.0,0.0]  # Just to reduce computation, only run reduced approach when BIFOR is used.
+                mt_reduced = metric(label, ad_detector.score(test_x, True)) #Bagging approach
+                result = result.append(
+                    pd.Series([alpha] + [num_missing /
+                                                    float(len(miss_column))] + [mt[0]] + [mt_reduced[0]] +[mt_impute[0]]
+                              +[en_size] + [algorithm]),
+                    ignore_index=True)
+
 
     result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
                            2: "auc_mean_impute",  3: "auc_reduced", 4: "auc_MICE_impute", 5: "ensemble_size"}, #, 6:"algorithm"},
                   inplace=True)
     return result
 
-def random_miss_prop(train_x, label,  miss_column, algorithm):
+def random_miss_prop(train_x, label,  miss_column, algorithm, file_name):
     """
     Assume all column of train_x can miss.
     :param train_x:
@@ -124,8 +178,6 @@ def random_miss_prop(train_x, label,  miss_column, algorithm):
                   inplace=True)
     return result
 
-
-
 def miss_proportions_exp(train_x, label, miss_column, algorithm):
     ensemble_size = 2  # run upto 4 times
     result = pd.DataFrame()
@@ -164,104 +216,6 @@ def miss_proportions_exp(train_x, label, miss_column, algorithm):
 
 
 
-# def ifor_miss_features(train_x, label, file_name, miss_column):
-#     # Train the forest
-#     ensemble_size = 4  # run upto 4 times
-#     result = pd.DataFrame()
-#     alpha = 0.1
-#     input_d = train_x.shape[1]
-#     miss_prop = np.arange(0.0, 0.35, 0.05)
-#     fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
-#
-#     for en_size in range(1, 5):
-#         ff = train_forest(train_x, True, en_size)
-#         for alpha in miss_prop:
-#             for num_missing in range(0, fraction_missing_features):
-#                 test_x = train_x.copy()
-#                 # print "{0},{1}", num_missing, train_x.shape[1]
-#                 inject_missing_value(test_x, num_missing, alpha, miss_column)
-#                 # Check the value.
-#                 ms_score = ff.score(test_x, False)
-#                 mt = metric(label, ms_score)
-#                 mt_cmv = metric(label, ff.score(test_x, True))
-#                 # print "For ", [num_missing] + mt + [alpha]
-#                 result = result.append(
-#                     pd.Series([alpha] + [num_missing /
-#                                          float(len(miss_column))] + mt + mt_cmv + [en_size]),
-#                     ignore_index=True)
-#     result.rename(columns={0: "anom_prop", 1: "num_miss_features",
-#                            2: "auc", 3: "ap", 4: "auc_cm", 5: "ap_cm", 6: "ensemble_size"},
-#                   inplace=True)
-#     return result
-
-
-# def lod_miss_features(train_x, label, file_name, miss_column):
-#     # Train the forest
-#     ensemble_size = 4  # run upto 4 times
-#     result = pd.DataFrame()
-#     #alpha = 0.1
-#     input_d = train_x.shape[1]
-#     miss_prop = np.arange(0.0, 0.35, 0.05)
-#     fraction_missing_features = int(np.ceil(len(miss_column) * 0.8))
-#     for en_size in range(1, 5):
-#         pvh = loda_train(train_x, maxk=100 * en_size)
-#         for alpha in miss_prop:
-#             for num_missing in range(0, fraction_missing_features):
-#                 test_x = train_x.copy()
-#                 # print "{0},{1}", num_missing, train_x.shape[1]
-#                 inject_missing_value(test_x, num_missing, alpha, miss_column)
-#                 ms_score = loda_score(test_x, pvh=pvh, check_miss=False).nll
-#                 mt = metric(label, ms_score)
-#                 mt_cmv = metric(label,
-#                                 loda_score(test_x, pvh=pvh, check_miss=True).nll)
-#                 # print "For ", [num_missing] + mt + [alpha]
-#                 result = result.append(
-#                     pd.Series([alpha] + [num_missing /
-#                                          float(len(miss_column))] + mt + mt_cmv + [en_size]),
-#                     ignore_index=True)
-#
-#     result.rename(columns={0: "anom_prop", 1: "num_miss_features",
-#                            2: "auc", 3: "ap", 4: "auc_cm", 5: "ap_cm", 6: "ensemble_size"},
-#                   inplace=True)
-#     return result
-
-#
-# def chek_anomaly_ranking(train_x, train_lbl, input_name, algorithm="loda"):
-#     """
-#     Check ranking of anomaly point when applying missing values.
-#     """
-#     fraction_missing_features = int(np.ceil(train_x.shape[1] * 0.8))
-#     result = pd.DataFrame()
-#     input_d = train_x.shape[1]
-#
-#     if algorithm == "loda":
-#         pvvh = loda_train(train_data, maxk=100)
-#
-#     else:
-#         # do for iforest for now.
-#         ff = train_forest(train_data)
-#
-#     for num_missing in range(0, fraction_missing_features):
-#         test_x = train_x.copy()
-#         # print "{0},{1}", num_missing, train_x.shape[1]
-#         inject_missing_value(test_x, num_missing, alpha)
-#
-#         ms_score = loda_score(test_x, pvh=pvh, check_miss=False).nll
-#         mt = metric(label, ms_score)
-#         mt_cmv = metric(label,
-#                         loda_score(test_x, pvh=pvh, check_miss=True).nll)
-#         # print "For ", [num_missing] + mt + [alpha]
-#         result = result.append(
-#             pd.Series([alpha] + [num_missing /
-#                                  float(input_d)] + mt + mt_cmv),
-#             ignore_index=True)
-#
-#     result.rename(
-#         columns={0: "anom_prop", 1: "num_miss_features",
-#                  2: "auc", 3: "ap", 4: "auc_cm", 5: "ap_cm"},
-#         inplace=True)
-
-
 def main():
     parser = argparse.ArgumentParser(description="iForest usage switches")
     parser.add_argument('-i', '--input', type=argparse.FileType('r'),
@@ -272,9 +226,10 @@ def main():
     parser.add_argument('-n', '--iteration', help="Number of iterations")
     parser.add_argument('-g', '--algorithm', help="Type of algorithm to use")
     parser.add_argument('-e', '--ensemble', help='Ensemble size. Defualt 1')
-    parser.add_argument('-t','--type', help="Experiment type.")
+    parser.add_argument('-t', '--type', help="Experiment type.")
     parser.add_argument('-o', '--outputdir', help="Output directory location")
     args = parser.parse_args()
+
     df = pd.read_csv(args.input)
     if args.outputdir is None:
             output_dir = "/scratch/cluster-share/zemicheal/missingdata/kddexp"
@@ -306,22 +261,16 @@ def main():
 
     input_name = os.path.basename(args.input.name)
     if args.type=='cell':
-        result = random_miss_prop(train_data, train_lbl, miss_colmn, str(args.algorithm).upper())
+        result = random_miss_prop(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+                                  file_name=args.input.name)
     else:
-        result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper())
+        if str(args.algorithm).upper()=="EGMM":
+            result = algo_miss_features(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+                                         file_name=args.input.name, label_field=args.label)
+        else:
+            result = algo_miss_featuresX(train_data, train_lbl, miss_colmn, str(args.algorithm).upper(),
+                                    file_name=args.input.name, label_field=args.label)
 
-
-        # # print train_lbl
-    # if args.algorithm == "loda":
-    #     result = lod_miss_features(
-    #         train_data, train_lbl, input_name, miss_colmn)
-    # else:
-    #     result = ifor_miss_features(
-    #         train_data, train_lbl, input_name, miss_colmn)
-    #for it in range(1, int(args.iteration)):
-     #    result = pd.concat([result, miss_features(
-     #        train_data, train_lbl, os.path.basename(args.input.name))])
-    #result = None
 
     dir_name = os.path.join(output_dir, args.algorithm,
                             os.path.splitext(input_name)[0])

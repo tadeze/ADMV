@@ -1,0 +1,3 @@
+[submodule "algorithm/pyad"]
+	path = algorithm/pyad
+	url = https://github.com/tadeze/pyad

@@ -14,7 +14,7 @@
 # select queue - if needed 
 
 # 5 cpu will be used. 
-#$ -pe thread 5
+## $ -pe thread 5
 # see where the job is being run
 #hostname
 hostname
@@ -47,31 +47,12 @@ if [ `which python` == "/bin/python" ];
 then
 export PATH="/nfs/guille/bugid/adams/ifTadesse/anaconda2/bin:$PATH"
 fi
-#which python
-if [ -z $ALGORITHM ];
+if [ -z $MISSATT ];
 then
-	ALGO=("ifor" "loda" "bifor" "egmm")
-	for ALGORITHM in "${ALGO[@]}"
-	do
-
-		if [ -z $MISSATT ];
-		then
-			python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE -o $OUTDIR
-		else
-			python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE -m $MISSATT -o $OUTDIR
-
-		fi
-	done
+    python splitjobs.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -t $TYPE -o $OUTDIR -g $ALGORITHM
 else
-		if [ -z $MISSATT ];
-		then
-			python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE -o $OUTDIR
-		else
-			python mainexperiment.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -g $ALGORITHM -t $TYPE -m $MISSATT -o $OUTDIR
-
-		fi
+    python splitjobs.py -i $BENCHMARK -c $FIELD -l $LABEL -n $SGE_TASK_ID -t $TYPE -m $MISSATT -o $OUTDIR -g $ALGORITHM
 
 fi
-
 #print date and time again
 date

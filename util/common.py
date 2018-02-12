@@ -1,7 +1,9 @@
 import numpy as np
 import sklearn.metrics as mt
+#tempresult = "/nfs/guille/bugid/adams/ifTadesse/kddexperiment/missingdata/tempresult"
+tempresult = "/scratch/cluster-share/zemicheal/temp"
 
-
+#tempresult = "/home/tadeze/projects/research/kdd2018/tempresult"
 ## MISSING VALUE FLAGES
 MISSING_VALUE = -9999.0
 missing_value_per = 0.1
@@ -118,3 +120,5 @@ def available_models(models_featues, miss_column):
     with_miss_column = models_featues[:,miss_column]
     available_models = np.where(~with_miss_column.any(axis=1))[0]
     return available_models
+if __name__ == '__main__':
+    print metric([1,0,1,0,0],[0.3,0.5,0.4,0.2,0.9])

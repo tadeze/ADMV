@@ -13,7 +13,7 @@ libloc=NULL
 
 library('MASS')
 library('mvtnorm',lib.loc=libloc)
-suppressMessages(require('IsolationForest',lib.loc=libloc))
+#suppressMessages(require('IsolationForest',lib.loc=libloc))
 suppressMessages(require('pROC',lib.loc=libloc))
 suppressMessages(require('osu.common',lib.loc=libloc))
 
@@ -51,26 +51,29 @@ util.change_n_toparameter<-function(...,n)
 
 
 util.generateData <- function(n_normal,d,d_rel,delta,n_anomaly,
-			      corr=FALSE)
+			      corr=FALSE, covxy=0)
   
 {
   
   mn_normal <- matrix(0,nrow=1,ncol=d)
   sg_normal <- diag(d)
+ # sg <- diag(d)+covxy-diag(covxy,d)
   s_normal <- data.frame(class=0,rmvnorm(n_normal,mean=mn_normal,sigma=sg_normal))
  
   relFeatures=sample(d,d_rel)
   mn_anomaly <- matrix(c(rep(0,d)))
   mn_anomaly[relFeatures]=delta
-  sg_anomaly <- diag(d)
+
+sg_anomaly=  diag(d)
 
   if(corr==TRUE)
   {
-    covxy=0.9  #correlation coefficient, which cov(x,y) = rho*var(x)*var(y)
+    #covxy=0.9  #correlation coefficient, which cov(x,y) = rho*var(x)*var(y)
     
     #Modify the correlated relevant features with 0.9 covariance matrix
-    sg_anomaly[relFeatures,relFeatures]=  sg_anomaly[relFeatures,relFeatures]+covxy-diag(0.9,length(relFeatures))
+    sg_anomaly[relFeatures,relFeatures]=  sg_anomaly[relFeatures,relFeatures]+covxy-diag(covxy,length(relFeatures))
   
+  #sg_anomaly = sg
   }
   
   s_anomaly <- data.frame(class=1,rmvnorm(n_anomaly,mean=mn_anomaly,sigma=sg_anomaly))

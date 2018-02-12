@@ -1,15 +1,5 @@
-#
-META=$1
-
-for i in "a" "b" "c"
+farr=( "ai" "db" "fc" )
+for i in ${farr[@]}
 do
-	echo $i
+	echo "$i"
 done
-
-
-if [ -z $META ];
-then 
-	echo "No argument given"
-else
-	echo $META
-fi
