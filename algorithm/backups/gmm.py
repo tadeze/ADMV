@@ -1,10 +1,6 @@
 from sklearn.mixture import GaussianMixture
 import numpy as np
-from pypr.clustering import gmm
-class Box:
-    def __init__(self):
-        self.h = None
-        self.w = None
+
 class GMM(object):
     def __init__(self, replica=30, max_iteration=50, comp=(3,4,5)):
         self.comp = comp

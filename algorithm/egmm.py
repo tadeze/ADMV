@@ -1,7 +1,7 @@
 import os
 from pandas import read_csv
 from util.common import *
-#tempresult ="egmm_model"
+
 class Egmm:
     def __init__(self, egmm_path="~/adams/kddexperiment/missingdata/algorithm/egmm"):
         self.gmm_path =  egmm_path
@@ -33,36 +33,7 @@ class Egmm:
         command = self.gmm_path+" -file {0:s} -dims {1:d} -clusterlist {2:s} -ensemble {3:d} -replicates {4:d} -percentile {5:f}" \
                   " -ignoretiny -incremental -blocksize {6:d} -loadmodel -m {7:s} -missmarg -o {8:s} -skipleftcols {9:d}". \
             format(file_name, dims, clusterlist, ensemble, replicates, percentile, block_size, model_input, score_out, skip_cols)
-        #print command
-
         os.system(command)
 
         nlscore = read_csv(score_out)["nlscore"].as_matrix()
         return nlscore
-
-    #return read_csv(score_out)["score"].as_matrix()
-
-if __name__ == '__main__':
-    from util.common import metric
-    #file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
-    file_name = "../mixturesynthetic/synthetic_mixture_d_8_delta_-6_6_rho_0.4iter_3.csv"
-    #file_name ="/nfs/guille/bugid/adams/ifTadesse/kddexperiment/dataset/abalone_benchmark_0709.csv"
-    gmm = Egmm("./egmm")
-    gmm.train(file_name,8,"syeast.mdl","trainout.csv",skip_cols=1)
-    score = gmm.score_file(file_name,8,"syeast.mdl", "score_out.csv", skip_cols=1)
-    df = read_csv(file_name)
-    print df.head(5)
-    train_lbl = map(int, df.ix[:, 0] == "anomaly")
-    print train_lbl
-    print metric(train_lbl, score)
-
-    train_x = df.ix[:,6:].as_matrix().astype(np.float64)
-    #train_x[0,6] = np.nan
-    # scored = gmm.score(train_x, 7, "egmm_model/shuttle.mdl", "egmm_model/score_out.csv")
-    # print metric(train_lbl, scored)
-
-    import algorithm.pyad as pyft
-    ff = pyft.IsolationForest()
-    ff.train(train_x)
-    score = ff.score(train_x)
-    print metric(train_lbl, score)
