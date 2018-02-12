@@ -1,7 +1,7 @@
 import os
 from pandas import read_csv
 from util.common import *
-
+tempresult = "../tempresult"
 class Egmm:
     def __init__(self, egmm_path="~/adams/kddexperiment/missingdata/algorithm/egmm"):
         self.gmm_path =  egmm_path
@@ -44,25 +44,39 @@ class Egmm:
 
 if __name__ == '__main__':
     from util.common import metric
-    file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/yeast/fullsamples/yeast_1.csv"
+    file_name = "/home/tadeze/projects/missingvalue/datasets/anomaly/mammography/fullsamples/mammography_1.csv"#
+    test_file = "/home/tadeze/projects/research/gmmtest/mammo_miss.csv"
+    # yeast/fullsamples/yeast_1.csv"
     #file_name = "../yeast_1.csv"
     #file_name ="/nfs/guille/bugid/adams/ifTadesse/kddexperiment/dataset/abalone_benchmark_0709.csv"
     gmm = Egmm("./egmm")
-    gmm.train(file_name,7,"yeast.mdl","trainout.csv",skip_cols=6)
-    score = gmm.score_file(file_name,7,"yeast.mdl", "score_out.csv", skip_cols=6)
-    df = read_csv(file_name)
-    print df.head(5)
-    train_lbl = map(int, df.ix[:, 0] == "anomaly")
-    print train_lbl
-    print metric(train_lbl, score)
+    d = 6
+    skip_cols = 1
 
-    train_x = df.ix[:,6:].as_matrix().astype(np.float64)
+
+    #gmm.train(file_name,d,"yeast.mdl","trainout.csv",skip_cols=skip_cols)
+    score = gmm.score_file(file_name, d, "yeast.mdl", "score_out.csv", skip_cols=skip_cols)
+    score_miss = gmm.score_file(test_file, d, "yeast.mdl", "miss_score_out.csv", skip_cols=skip_cols)
+    df = read_csv(file_name)
+    ground_score = read_csv('../tempresult/trainout.csv')
+    #print df.head(5)
+    train_lbl = map(int, df.ix[:, 0] == "anomaly")
+    #print train_lbl
+    ground_score = ground_score.sort_values(["id"])
+    print metric(train_lbl, score)
+    print metric(train_lbl, ground_score["score"])
+
+
+    score_miss = gmm.score_file(test_file, d, "yeast.mdl", "miss_score_out.csv", skip_cols=skip_cols)
+    print metric(train_lbl, score_miss)
+
+    #train_x = df.ix[:,6:].as_matrix().astype(np.float64)
     #train_x[0,6] = np.nan
     # scored = gmm.score(train_x, 7, "egmm_model/shuttle.mdl", "egmm_model/score_out.csv")
     # print metric(train_lbl, scored)
-
-    import algorithm.pyad as pyft
-    ff = pyft.IsolationForest()
-    ff.train(train_x)
-    score = ff.score(train_x)
-    print metric(train_lbl, score)
+    #
+    # import algorithm.pyad as pyft
+    # ff = pyft.IsolationForest()
+    # ff.train(train_x)
+    # score = ff.score(train_x)
+    # print metric(train_lbl, score)
