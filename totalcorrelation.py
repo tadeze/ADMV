@@ -20,18 +20,33 @@ def total_correlation(mat_data):
     marg_entrop = np.sum(entropy(np.reshape(icov,[1,1])) for icov in np.var(mat_data,axis=0))
     print "marginal -- ", marg_entrop
     return marg_entrop - joint_entropy
-
+def testdata():
+	## check for uncorrelatd multivariate
+	d = 10
+	rho = 0.8
+	mu = np.zeros([d])
+	sigma = np.eye(d)
+	N = 1000
+	w = np.random.multivariate_normal(mu,sigma,N)
+	print "Total correlation for uncorrelated data\n"
+	print total_correlation(w)
+	### Total correlation for correlated.
+	print "Total correlation on correlated data\n"
+	sigma_corr = np.eye(d) + rho*np.ones(d) - rho*np.eye(d)
+	wp = np.random.multivariate_normal(mu, sigma_corr, N) 
+	print total_correlation(wp)
 
 if __name__ == '__main__':
-    w = np.random.randn(3,10)
-    dat = pd.read_csv('../group2/concrete_benchmark_1524.csv')
-    w = dat[dat['ground.truth']=="nominal"].ix[:,6:13].as_matrix().astype(np.float64)
-    #print w.shape
-    cvv = np.cov(w.T)
-    print cvv
-    #print np.var(w,axis=0)
-    np.linalg.det(cvv
-    varss = np.var(w, axis=0)
-    print varss[0], np.sum([entropy(np.reshape(vv,[1,1])) for vv in varss] )#print entropy(cvv))
-    #print
-    print total_correlation(w)
+    testdata()
+    # w = np.random.randn(3,10)
+    # dat = pd.read_csv('../group2/concrete_benchmark_1524.csv')
+    # w = dat[dat['ground.truth']=="nominal"].ix[:,6:13].as_matrix().astype(np.float64)
+    # print w.shape
+    # cvv = np.cov(w.T)
+    # print cvv
+    # print np.var(w,axis=0)
+    # np.linalg.det(cvv)
+    # varss = np.var(w, axis=0)
+    # print varss[0], np.sum([entropy(np.reshape(vv,[1,1])) for vv in varss] )#print entropy(cvv))
+    # print
+    # print total_correlation(w)

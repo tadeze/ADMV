@@ -201,7 +201,7 @@ write.table(all_filtered,"benchmark_result_filtered.csv",sep=",", row.names = F,
 
 
 ########### Experiments on the set of benchmark files ########## 
-file_name_path <- '../../kddexperiment/missingdata/group2Result/benchmark_frac_fixed_raw.csv'
+file_name_path <- '../../kddexperiment/missingdata/fault/spambase/spambase.csv'
 benchall <- read.csv(file_name_path,stringsAsFactors = F, header=F)
 
 names(benchall) <- names(read.csv('../../kddexperiment/missingdata/benchmark1/abalone_benchmark_0343/splitjobs_results_iter_11abalone_benchmark_0343.csv'))
@@ -228,12 +228,14 @@ bench_summary = benchdf %>% group_by(miss_prop, miss_features_prop, algorithm, m
 #Rename variables
 bench_summary$method[bench_summary$algorithm=="ifor" & bench_summary$method=="reduced"]= "prop.dist" 
 bench_summary$algorithm[bench_summary$algorithm=="bifor" & bench_summary$method=="reduced"]= "ifor" 
+bench_summary$method[bench_summary$algorithm=="egmm" & bench_summary$method=="reduced"]= "marginal" 
+
 names(bench_summary)[c(5,6,8)] = c("benchmark","auc","count")
 
-
+bsx <-  bench_summary %>% filter(method!="noimpute") %>% filter(algorithm!="bifor")
 write.table(bsx, "../../kddexperiment/missingdata/group2Result/benchmark_summary_filt_frac.csv", row.names = F, quote = F,sep=",")
 all_missing = bsx %>% filter(miss_prop==1)# %>% filter((algorithm %in% c("ifor","loda")) | (method =="reduced"))
-write.table(all_missing, "../../kddexperiment/missingdata/group2Result/all_miss_summary_frac.csv", row.names = F, quote = F,sep=",")
+write.table(all_missing, "../../kddexperiment/missingdata/group2Result/all_spambase_egmm.csv", row.names = F, quote = F,sep=",")
 
 
 groupby_shortformat<-function(datax, outputdir="summary/"){
@@ -258,13 +260,13 @@ for(bench in unique(all_missing$benchmark)){
   title = paste0(bench,"-- dimension: ",dimension)
   gpp[[bench]] = ggplot(data=all_missing[all_missing$benchmark==bench,],aes(x=miss_features_prop, y=auc, shape=algorithm, color=method, 
                                                            group=interaction(algorithm,method))) +
-   geom_errorbar(aes(ymin=auc-ci, ymax=auc+ci), width=.1, position=pd) +
+   #geom_errorbar(aes(ymin=auc-ci, ymax=auc+ci), width=.1, position=pd) +
    geom_line(position=pd) +
     geom_point(position=pd) +
     ylab('auc') + xlab('missing features proportion')  + 
     theme_light() +
    ggtitle(title)+
-  scale_shape_manual(values=c(16,8))
+  scale_shape_manual(values=c(16,8,7))
 }
 
 pdf('learning-line-ci-0.pdf',width=11)
@@ -272,8 +274,9 @@ for(bench in unique(all_missing$benchmark)){
   grid.arrange(gpp[[bench]])
 }
 dev.off()
-pdf('learning-line-cix.pdf',width=11)
-grid.arrange(grobs=gpp,ncol=4,nrow=4)
+
+pdf('page-fault-cix.pdf',width=11)
+grid.arrange(grobs=gpp,nrow=4)
 dev.off()
 
 

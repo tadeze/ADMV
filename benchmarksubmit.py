@@ -1,8 +1,10 @@
 import argparse
 import os
 import multiprocessing
-#from joblib import Parallel, delayed
-
+from joblib import Parallel, delayed
+from pandas import DataFrame,read_csv, Series
+from totalcorrelation import total_correlation
+import numpy as np
 
 def main():
     parser = argparse.ArgumentParser(description="Experiment parallel")
@@ -19,7 +21,6 @@ def main():
     parser.add_argument('-s','--server', help="Server type. Either `cluter` or `local`")
     parser.add_argument('-b', '--bench', help="Benchmark nam")
     parser.add_argument('-d', '--inputdir', help="Input directory.")
-
     args = parser.parse_args()
     return args
 
@@ -37,8 +38,6 @@ def submit_job(n):
         os.system(command)
         return True
 
-
-#input_dir = "../group2"
 input_dir = "synthetic"
 file_description = {'skin': 3,
                     'magic.gamma': 10, 'particle': 50, 'spambase': 57, 'fault': 27, 'gas': 128,
@@ -48,6 +47,12 @@ file_description = {'skin': 3,
                     }
 
 def parallel_local_single_batch(file_name, n):
+    """
+    Run in local machine.
+    :param file_name:
+    :param n:
+    :return:
+    """
     bench_name = os.path.basename(file_name).split("_")[0].split('.csv')[0]
     flag = int(args.label)
     column = str(flag + 1) + "-" + str(file_description[bench_name] + flag)
@@ -60,7 +65,6 @@ def parallel_local_single_batch(file_name, n):
     #print command
     os.system(command)
     return 1
-from joblib import Parallel, delayed
 def run_split_paralell():
     all_files = os.listdir(input_dir)
     num_cores = multiprocessing.cpu_count()
@@ -73,7 +77,7 @@ def run_split_paralell():
         if bench_name==args.bench:
 
             num_cores = multiprocessing.cpu_count()
-            result = Parallel(n_jobs=num_cores)(delayed(parallel_local_single_batch)(file_name, i) for i in range(1, 89))
+            result = Parallel(n_jobs=num_cores)(delayed(parallel_local_single_batch)(file_name, i) for i in range(1, 99))
 
 
 
@@ -97,7 +101,7 @@ def run_parallel():
     num_cores = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(num_cores)
     pool.map(parallel_local, all_files)
-    #result = Parallel(n_jobs=num_cores)(delayed(parallel_local)(file_name) for file_name in all_files)
+
 def donot_run_these(bench_name):
     if bench_name in ["particle", "gas", "yeast", "opt.digits","comm.and.crime",
                       "yearp"]:# or bench_name=="magic.gamma":
@@ -150,7 +154,7 @@ def split_submit_benchmark_files():
             command = "qdel {0:s}".format(file_name)
             os.system(command)
             continue
-        t_name = 90 #int(file_name.split("_")[2].split(".csv")[0])
+        t_name = int(file_name.split("_")[2].split(".csv")[0])
         #if bench_name =="spambase":
 
         command = "qsub -N " + bench_name+"_"+str(t_name)+ " -t 1-99 submitscript/splitsubmit.sh " + \
@@ -160,15 +164,14 @@ def split_submit_benchmark_files():
             continue
         if args.bench is not None:
             if bench_name == args.bench:
-                os.system(command)
+                if t_name in [1587, 1017, 613, 1523, 370, 977]:
+                    os.system(command)
         else:
             #print command
-            if bench_name in ["fault","pageb","spambase"]:
-                os.system(command)
+           # if bench_name in ["fault","pageb","spambase"]:
+            os.system(command)
             #break
-from pandas import DataFrame,read_csv, Series
-from totalcorrelation import total_correlation
-import numpy as np
+
 def total_information():
     flag = int(args.label)
     total_corr = DataFrame()
