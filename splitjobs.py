@@ -7,8 +7,9 @@ from util.common import *
 from missvalueinjector import ADDetector, MissingValueInjector
 from joblib import Parallel, delayed
 import multiprocessing
-
-ALGORITHMS = ["IFOR", "BIFOR", "LODA"]
+import logging
+logging.basicConfig(level=logging.DEBUG, filename="test.log")
+ALGORITHMS = ["IFOR", "BIFOR", "LODA","EGMM"]
 
 
 def replace_with_nan(index, df):
@@ -19,7 +20,7 @@ def replace_with_nan(index, df):
 
 def algo_parameters(t_id):
     t_id -=1
-    fraction_missing_features = np.arange(0.1,0.9,0.1)  # int(np.ceil(d / np.sqrt(d)))
+    fraction_missing_features = np.arange(0,0.9,0.1)  # int(np.ceil(d / np.sqrt(d)))
     miss_prop = np.arange(0, 1.1, 0.1)
     #print miss_prop, fraction_missing_features
     m, f = len(miss_prop), len(fraction_missing_features)
@@ -55,13 +56,21 @@ def single_benchmark(train_x, label, miss_column, file_name, label_field, algori
 
     def score_algo(test_x, method, score_bool=False):
         scores = []
+        local_score =[]
         for algo in algorithms:
             try:
                 if (method in ["mean", "MICE"]) and algo == "BIFOR":
                     continue
-                auc_score = metric(label, algorithms[algo].score(test_x, score_bool))[0]
+                local_score = algorithms[algo].score(test_x, score_bool)
+                logging.debug(
+                    "score {0:d} - {1:s} - {2:s}-{3:s}".format(len(local_score), file_name, str(frac_features),
+                                                               str(frac_missing_prop)))
+                auc_score = metric(label,local_score)[0]
+
                 scores.append([frac_missing_prop, frac_features, auc_score, algo, method, os.path.basename(file_name)])
             except Exception as e:
+               # logging.debug("score {0:d} - {1:s} - {2:s}-{3:s}".format(len(local_score), file_name, str(frac_features),
+                #                                               str(frac_missing_prop)))
                 print "Error from {0:s}".format(algo), e.message
                 continue
 
@@ -257,7 +266,7 @@ def main():
         else:
             algo_list = ALGORITHMS
         result = single_benchmark(train_x=train_data, label=train_lbl, miss_column=miss_colmn, file_name=args.input.name,
-                                  label_field=args.label, task_id=int(args.iteration),algorithm_list=algo_list)
+                                  label_field=lbl, task_id=int(args.iteration),algorithm_list=algo_list)
         result = pd.DataFrame(result)
     result.rename(columns={0: "miss_prop", 1: "miss_features_prop",
                            2: "auc", 3: "algorithm", 4: "method", 5: "bench_ame"

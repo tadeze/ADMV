@@ -1,84 +1,6 @@
 import algorithm.pyad as pft
 import numpy as np
-## Build Forest using bagged features.
-
-# class IForest(object):
-#     """
-#     IForest version using most python code. This is used for experimenting version.
-#     """
-#     def __init__(self, train_df=None, ntree=100, nsample=512,
-#                  max_height=0, adaptive=False, rangecheck=True, check_missing_value=True):
-#         self.nsample = nsample
-#         self.ntree = ntree
-#         self.rangecheck = rangecheck
-#         self.adaptive = adaptive
-#         self.maxheight = max_height
-#         self.check_missing_value = check_missing_value
-#         self.rot_trees = []
-#         self.trees = []
-#         #self.sparsity = sparsity
-#         if train_df is not None:
-#             self.train_df = train_df
-#             self.train(self.train_df)
-#
-#     def train(self, train_df):
-#         """ Train forest
-#         :type train_df: numpy.ndarray training dataset
-#         """
-#
-#         assert isinstance(train_df, np.ndarray)
-#         nrow, ncol = train_df.shape
-#         if self.nsample > nrow:
-#             self.nsample = nrow
-#         for tree in range(self.ntree):
-#             # generate rotation matrix
-#             sample_index = np.random.choice(nrow, self.nsample, False)
-#             itree = pft.IsolationTree()
-#             itree.train_points = sample_index
-#             itree.iTree(sample_index, train_df, 0, self.maxheight)
-#             self.trees.append({"tree": itree})
-#
-#     def depth(self, test_df, oob=False):
-#
-#         depth = []
-#
-#         for tree_inst in self.trees:
-#             #rot_mat = rottree["rotmat"]
-#             tree = tree_inst["tree"]
-#             depth.append(tree.path_length(test_df))
-#         return depth
-#
-#     def average_depth(self, test_df):
-#         assert isinstance(test_df, np.ndarray)
-#         avg_depth = [np.mean(self.depth(row)) for row in test_df]
-#         return np.array(avg_depth)
-#
-#     def oob_depth(self, test_df):
-#         """Compute depth using the out of bag trees"""
-#         assert isinstance(test_df, np.ndarray)
-#         depth = []
-#         for rottree in self.trees:
-#             tree = rottree["tree"]
-#             if test_df not in tree.train_points:
-#                 depth.append(tree.path_length(test_df))
-#         return (len(depth), np.mean(depth))
-#
-#     def explanation(self, query_point):
-#         #explanation=[]
-#         features = collection.defaultdict(float)
-#         for rottree in self.trees:
-#             tree = rottree["tree"]
-#             for index, depth_inv in tree.explanation(query_point).items():
-#                 features[index] += depth_inv
-#         return features
-#
-#     def score(self, test_df):
-#         #score of allpoints
-#         bst = lambda n: 0.0 if (n - 1) <= 0 else (2.0 * np.log(n - 1) + 0.5772156649) - 2.0 * (n - 1) / n
-#         avg_depth = self.average_depth(test_df)
-#         scores = np.power(2, (-1 * avg_depth / bst(self.nsample)))
-#         return scores
-
+#import time
 NA = np.nan #-9999.0
 
 class BaggedIForest(pft.IForest):
@@ -155,38 +77,8 @@ class BaggedIForest(pft.IForest):
             all_depth.append(tree["tree"].path_length(sliced_data))
         self.num_tree_used.append(len(non_missing_trees))
         return all_depth
-    #obsolute
-    def depth_old(self, test_df, oob=False):
-        """
-        :param test_df: ndarray 1xD vector of datapoint
-        :param oob:
-        :return:list list of depth from trees.
-        """
-        if self.faster:
-            return self.depthp(test_df)
-        all_depth = []
-        tree_index =[]
-        if self.check_miss:
-            miss_column = self.get_miss_features(test_df)
-        else:
-            miss_column = []
-        i = -1
-        for tree_inst in self.trees:
-            i = i + 1
 
-            tree = tree_inst["tree"]
-            used_cols = tree_inst["cols"]
 
-            if tree_inst["cols"].any():
-                if np.intersect1d(miss_column, used_cols).any():
-                    continue
-                all_depth.append(tree.path_length(test_df[tree_inst["cols"]]))
-            else:
-                all_depth.append(tree.path_length(test_df))
-            tree_index.append(i)
-        self.num_tree_used.append(len(all_depth))
-        return all_depth
-import time
 if __name__ == '__main__':
 #<type 'list'>: [14.0, 14.0, 5.0, 13.0, 17.0, 12.0, 17.0]
     w = np.random.randn(20,5)

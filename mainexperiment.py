@@ -206,43 +206,6 @@ def miss_proportions_exp(train_x, label, miss_column, algorithm):
 
 
 
-
-#
-# def chek_anomaly_ranking(train_x, train_lbl, input_name, algorithm="loda"):
-#     """
-#     Check ranking of anomaly point when applying missing values.
-#     """
-#     fraction_missing_features = int(np.ceil(train_x.shape[1] * 0.8))
-#     result = pd.DataFrame()
-#     input_d = train_x.shape[1]
-#
-#     if algorithm == "loda":
-#         pvvh = loda_train(train_data, maxk=100)
-#
-#     else:
-#         # do for iforest for now.
-#         ff = train_forest(train_data)
-#
-#     for num_missing in range(0, fraction_missing_features):
-#         test_x = train_x.copy()
-#         # print "{0},{1}", num_missing, train_x.shape[1]
-#         inject_missing_value(test_x, num_missing, alpha)
-#
-#         ms_score = loda_score(test_x, pvh=pvh, check_miss=False).nll
-#         mt = metric(label, ms_score)
-#         mt_cmv = metric(label,
-#                         loda_score(test_x, pvh=pvh, check_miss=True).nll)
-#         # print "For ", [num_missing] + mt + [alpha]
-#         result = result.append(
-#             pd.Series([alpha] + [num_missing /
-#                                  float(input_d)] + mt + mt_cmv),
-#             ignore_index=True)
-#
-#     result.rename(
-#         columns={0: "anom_prop", 1: "num_miss_features",
-#                  2: "auc", 3: "ap", 4: "auc_cm", 5: "ap_cm"},
-#         inplace=True)
-
 def main():
     parser = argparse.ArgumentParser(description="iForest usage switches")
     parser.add_argument('-i', '--input', type=argparse.FileType('r'),
